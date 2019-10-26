@@ -1,5 +1,4 @@
 #include<iostream>
-#include<list>
 #include<assert.h>
 #include<cmath>
 #include<vector>
