@@ -14,8 +14,7 @@ int main() {
 
         Poligon_t<double> triangle_1(pt_1, pt_2, pt_3), triangle_2(pt_4, pt_5, pt_6);
 
-        Clip_poligon<double>(triangle_1, triangle_2);
-
+        Clip_poligon<double>(triangle_1, triangle_2);;
 
         /*std::vector<Point_t<double>>::iterator it = triangle_1.pt_list.begin();
         while(it != triangle_1.pt_list.end()) {

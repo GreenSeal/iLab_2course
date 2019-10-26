@@ -137,11 +137,12 @@ template <typename T> int Check_side(Line_t<T> line, Point_t<T> pt, int right_si
 //Добавляем точки пересечения
 template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line, Poligon_t<T>& base_triangle) {
 
-	typename std::vector<Point_t<T>>::iterator it_1 = triangle.pt_list.begin(), it_2 = ++(triangle.pt_list.begin());
+	auto it_1 = triangle.pt_list.begin(), it_2 = ++(triangle.pt_list.begin());
 	Point_t<T> pt_1, pt_2, pt_inters;
 	Line_t<T> side;
 	double const tol = 0.000001;
 	
+	if((it_1 == triangle.pt_list.end()) || (it_2 == triangle.pt_list.end())) return 0;	
 //Переписать с учетом сравнения для double - done
 	while(true) {
 		pt_1 = *it_1;
@@ -184,7 +185,7 @@ template <typename T> bool cmp(Point_t<T> a, Point_t<T> b) {
 
 //Обрезаем треугольник по стороне
 template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line, int side) {
-	typename std::vector<Point_t<T>>::iterator it_1 = triangle_base.pt_list.begin(), it_2 = ++(triangle_base.pt_list.begin());
+	auto it_1 = triangle_base.pt_list.begin(), it_2 = ++(triangle_base.pt_list.begin());
 	Point_t<T> pt_1;
 	Line_t<T> line_base;
 	double const tol = 0.000001;
@@ -193,7 +194,7 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 	//Выкидываем точки, которые лежат не с той стороны
 	
 	
-	if(it_1 == triangle_base.pt_list.end()) return 0;	
+	if((it_1 == triangle_base.pt_list.end()) || (it_2 == triangle_base.pt_list.end())) return 0;	
 	
 	while(true) {
 		pt_1 = *it_1;
@@ -227,7 +228,7 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>& triangle_clip) {
 	Line_t<T> line;
 	Point_t<T> pt_1, pt_2;
-	typename std::vector<Point_t<T>>::iterator it_1 = triangle_clip.pt_list.begin(), it_2 = ++(triangle_clip.pt_list.begin());
+	auto it_1 = triangle_clip.pt_list.begin(), it_2 = ++(triangle_clip.pt_list.begin());
 		
 	while(true) {
 		Point_t<T> pt_1 = *it_1;
@@ -264,7 +265,7 @@ template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>
 
 template <typename T> double Poligon_t<T>::s_decart() {
 	double S = 0.0;
-	typename std::vector<Point_t<T>>::iterator it_1 = pt_list.begin(), it_2 = ++(pt_list.begin());
+	auto it_1 = pt_list.begin(), it_2 = ++(pt_list.begin());
 	if(it_1 == pt_list.end() || it_2 == pt_list.end()) return S;
 	while(it_2 != pt_list.end()) {
 		S = S + (it_1 -> x)*(it_2 -> y) - (it_2 -> x)*(it_1 -> y);
@@ -279,33 +280,10 @@ template <typename T> double Poligon_t<T>::s_decart() {
 	return S;
 }
 
-/*int main() {
-	double x_pt_1, y_pt_1, x_pt_2, y_pt_2, x_pt_3, y_pt_3;
-	double x_pt_4, y_pt_4, x_pt_5, y_pt_5, x_pt_6, y_pt_6;
-	double S = 0.0;
+/*std::vector<Point_t<double>>::iterator it = triangle_1.pt_list.begin();
+while(it != triangle_1.pt_list.end()) {
+	std::cout << it -> x << ";" << it -> y << "///";
+	it++;
+}
 	
-	std::cin >> x_pt_1 >> y_pt_1 >> x_pt_2 >> y_pt_2 >> x_pt_3 >> y_pt_3;
-	std::cin >> x_pt_4 >> y_pt_4 >> x_pt_5 >> y_pt_5 >> x_pt_6 >> y_pt_6;
-	
-	Point_t<double> pt_1(x_pt_1, y_pt_1), pt_2(x_pt_2, y_pt_2), pt_3(x_pt_3, y_pt_3), 
-			pt_4(x_pt_4, y_pt_4), pt_5(x_pt_5, y_pt_5), pt_6(x_pt_6, y_pt_6);
-	
-	Poligon_t<double> triangle_1(pt_1, pt_2, pt_3), triangle_2(pt_4, pt_5, pt_6);
-
-	Clip_poligon<double>(triangle_1, triangle_2);
-		
-
-	*std::vector<Point_t<double>>::iterator it = triangle_1.pt_list.begin();
-	while(it != triangle_1.pt_list.end()) {
-		std::cout << it -> x << ";" << it -> y << "///";
-		it++;
-	}
-	
-	std::cout << std::endl;*
-
-	S = S_poligon(triangle_1);
-
-	std::cout << S << std::endl;
-	
-	return 0;
-}*/
+std::cout << std::endl;*/
