@@ -5,6 +5,7 @@
 #include<vector>
 #include<algorithm>
 
+double const tol = 0.000001;
 
 template <typename T> struct Point_t {
 
@@ -24,11 +25,7 @@ template <typename T> struct Poligon_t {
 
         std::vector<Point_t<T>> pt_list;
 
-        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) {
-                pt_list.push_back(pnt_1);
-                pt_list.push_back(pnt_2);
-                pt_list.push_back(pnt_3);
-        };
+        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) : pt_list{pnt_1, pnt_2, pnt_3} {};
 
         //Переводим полигон в центр
         int go_to_centre();
@@ -50,7 +47,7 @@ template <typename T> struct Poligon_t {
 template <typename T> int Poligon_t<T>::go_to_centre() {
         T x_cntr, y_cntr, sum_x = 0, sum_y = 0;
         int count = 0;
-        typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+        auto it = pt_list.begin();
         while(it != pt_list.end()) {
                 sum_x += it -> x;
                 sum_y += it -> y;
@@ -71,7 +68,7 @@ template <typename T> int Poligon_t<T>::go_to_centre() {
 }
 
 template <typename T> int Poligon_t<T>::polar() {
-        typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+        auto it = pt_list.begin();
         T x, y;
         while(it != pt_list.end()) {
                 x = it -> x;
@@ -84,7 +81,7 @@ template <typename T> int Poligon_t<T>::polar() {
 }
 
 template <typename T> int Poligon_t<T>::decart() {
-	typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+	auto it = pt_list.begin();
         T x, y;
         while(it != pt_list.end()) {
                 x = it -> x;
@@ -99,9 +96,9 @@ template <typename T> int Poligon_t<T>::decart() {
 
 template <typename T> int Poligon_t<T>::ident_side(Line_t<T> line) {
 	
-        typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+        auto it = pt_list.begin();
         Point_t<T> pt;
-        double const tol = 0.000001;
+        //double const tol = 0.000001;
 	
 	while(true){
                 pt = *it;
@@ -117,7 +114,7 @@ template <typename T> int Poligon_t<T>::ident_side(Line_t<T> line) {
 
 
 template <typename T> int Check_side(Line_t<T> line, Point_t<T> pt, int right_side) {
-	double const tol = 0.00001;
+	//double const tol = 0.00001;
 	int side;
 	if((line.A*pt.x + line.B*pt.y + line.C - tol) > 0) side = 1;
 	
@@ -140,7 +137,7 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 	auto it_1 = triangle.pt_list.begin(), it_2 = ++(triangle.pt_list.begin());
 	Point_t<T> pt_1, pt_2, pt_inters;
 	Line_t<T> side;
-	double const tol = 0.000001;
+	//double const tol = 0.000001;
 	
 	if((it_1 == triangle.pt_list.end()) || (it_2 == triangle.pt_list.end())) return 0;	
 //Переписать с учетом сравнения для double - done
@@ -177,7 +174,7 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 
 //Сравниваем точки по углу, т.е. сортируем их по часовой стрелке
 template <typename T> bool cmp(Point_t<T> a, Point_t<T> b) {
-	double tol = 0.000001;
+	//double tol = 0.000001;
 	if(((a.y + tol) < b.y) && ((a.y - tol) < b.y)) return true;
 	
 	else return false;
@@ -188,7 +185,7 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 	auto it_1 = triangle_base.pt_list.begin(), it_2 = ++(triangle_base.pt_list.begin());
 	Point_t<T> pt_1;
 	Line_t<T> line_base;
-	double const tol = 0.000001;
+	//double const tol = 0.000001;
 	Poligon_t<T> copy_triangle = triangle_base;
 	//Треугольник-база используется здесь как полигон пересечения, треугольник который там лежал сохраняется в copy_triangle	
 	//Выкидываем точки, которые лежат не с той стороны
