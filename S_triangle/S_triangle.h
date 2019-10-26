@@ -2,103 +2,122 @@
 #include<list>
 #include<assert.h>
 #include<cmath>
+#include<vector>
+#include<algorithm>
 
-template <typename T> class Point_t {
-	public:
-		T x, y;
 
-	Point_t() {
-		x = 0;
-		y = 0;
-	};
+template <typename T> struct Point_t {
 
-	Point_t(T X, T Y) {
-		x = X;
-		y = Y;
-	};
+        T x, y;
+
+        Point_t(T X = 0, T Y = 0) : x(X), y(Y) {};
 };
 
-template <typename T> class Line_t {
-	public:
-		T A, B, C;
+template <typename T> struct Line_t {
 
-	Line_t() {
-		A = 0;
-		B = 0;
-		C = 0;
-	};
+        T A, B, C;
 
-	Line_t(T a, T b, T c) {
-		A = a;
-		B = b;
-		C = c;
-	};
+        Line_t(T a = 0, T b = 0, T c = 0) : A(a), B(b), C(c) {};
 };
 
-template <typename T> class Poligon_t {
-	public: 
-		std::list<Point_t<T>> pt_list;
+template <typename T> struct Poligon_t {
 
-	Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) {
-		pt_list.push_back(pnt_1);
-		pt_list.push_back(pnt_2);
-		pt_list.push_back(pnt_3);
-	};
+        std::vector<Point_t<T>> pt_list;
 
-	//Переводим полигон в центр
-	int go_to_centre() {
-		T x_cntr, y_cntr, sum_x = 0, sum_y = 0;
-		int count = 0;
-		typename std::list<Point_t<T>>::iterator it = pt_list.begin();
-		while(it != pt_list. end()) {
-			sum_x += it -> x;
-			sum_y += it -> y;
-			it++;
-			count++;
-		}
+        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) {
+                pt_list.push_back(pnt_1);
+                pt_list.push_back(pnt_2);
+                pt_list.push_back(pnt_3);
+        };
 
-		x_cntr = sum_x/count;
-		y_cntr = sum_y/count;
-		it = pt_list.begin();
+        //Переводим полигон в центр
+        int go_to_centre();
 
-		while(it != pt_list.end()) {
-			it -> x = (it -> x) - x_cntr;
-			it -> y = (it -> y) - y_cntr;
-			it++;
-		}
-		return 0;	
-	};
+	//Переводим полигон из декартовых в полярные координаты
+        int polar(); 
 
-	//Переводим полигон в полярные координаты
-	int polar() {
-		typename std::list<Point_t<T>>::iterator it = pt_list.begin();
-		T x, y;
-		while(it != pt_list.end()) {
-			x = it -> x;
-		      	y = it -> y;
-			it -> x = atan2(y, x);
-			it -> y = sqrt(x*x + y*y);
-			it++;
-		}
-		return 0;
-	};
+        //Переводим полигон из полярных в декартовы координаты
+        int decart(); 
 
-	int decart() {
-		typename std::list<Point_t<T>>::iterator it = pt_list.begin();
-		T x, y;
-		while(it != pt_list.end()) {
-			x = it -> x;
-			y = it -> y;
-			it -> x = y*cos(x);
-			it -> y = y*sin(x);
-			it++;
-		}
-		return 0;
-	};
+	//Находим с какой стороны от line лежит треугольник
+        int ident_side(Line_t<T> line);
+
+	//Площадь треугольника в декартовых координатах
+	double s_decart();
 };
+
+
+template <typename T> int Poligon_t<T>::go_to_centre() {
+        T x_cntr, y_cntr, sum_x = 0, sum_y = 0;
+        int count = 0;
+        typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+        while(it != pt_list.end()) {
+                sum_x += it -> x;
+                sum_y += it -> y;
+                it++;
+                count++;
+        }
+
+        x_cntr = sum_x/count;
+        y_cntr = sum_y/count;
+        it = pt_list.begin();
+
+        while(it != pt_list.end()) {
+                it -> x = (it -> x) - x_cntr;
+                it -> y = (it -> y) - y_cntr;
+                it++;
+        }
+        return 0;
+}
+
+template <typename T> int Poligon_t<T>::polar() {
+        typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+        T x, y;
+        while(it != pt_list.end()) {
+                x = it -> x;
+                y = it -> y;
+                it -> x = atan2(y, x);
+                it -> y = sqrt(x*x + y*y);
+                it++;
+        }
+        return 0;
+}
+
+template <typename T> int Poligon_t<T>::decart() {
+	typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+        T x, y;
+        while(it != pt_list.end()) {
+                x = it -> x;
+                y = it -> y;
+                it -> x = y*cos(x);
+                it -> y = y*sin(x);
+                it++;
+        }
+        
+	return 0;
+}
+
+template <typename T> int Poligon_t<T>::ident_side(Line_t<T> line) {
+	
+        typename std::vector<Point_t<T>>::iterator it = pt_list.begin();
+        Point_t<T> pt;
+        double const tol = 0.000001;
+	
+	while(true){
+                pt = *it;
+                if((line.A*pt.x + line.B*pt.y + line.C - tol) > 0.0) return 1;
+
+                if((line.A*pt.x + line.B*pt.y + line.C + tol) < 0.0) return -1;
+
+                it++;
+        	assert(it != pt_list.end());
+	}
+
+} 
+
 
 template <typename T> int Check_side(Line_t<T> line, Point_t<T> pt, int right_side) {
-	double const tol = 0.000001;
+	double const tol = 0.00001;
 	int side;
 	if((line.A*pt.x + line.B*pt.y + line.C - tol) > 0) side = 1;
 	
@@ -115,26 +134,10 @@ template <typename T> int Check_side(Line_t<T> line, Point_t<T> pt, int right_si
 	else return -1;
 }
 
-//Находим, с какой стороны от прямой находится остальная часть треугольника
-template <typename T> int Ident_side(Line_t<T> line, Poligon_t<T>& triangle) {
-	typename std::list<Point_t<T>>::iterator it = triangle.pt_list.begin();
-	Point_t<T> pt;
-	double const tol = 0.000001;
-	while(true){
-		pt = *it;
-		if((line.A*pt.x + line.B*pt.y + line.C - tol) > 0.0) return 1;
-		
-		if((line.A*pt.x + line.B*pt.y + line.C + tol) < 0.0) return -1;
-		
-		it++;
-		assert(it != triangle.pt_list.end());
-	}
-}
-
 //Добавляем точки пересечения
 template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line, Poligon_t<T>& base_triangle) {
 
-	typename std::list<Point_t<T>>::iterator it_1 = triangle.pt_list.begin(), it_2 = ++(triangle.pt_list.begin());
+	typename std::vector<Point_t<T>>::iterator it_1 = triangle.pt_list.begin(), it_2 = ++(triangle.pt_list.begin());
 	Point_t<T> pt_1, pt_2, pt_inters;
 	Line_t<T> side;
 	double const tol = 0.000001;
@@ -155,7 +158,7 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 			pt_inters.y = -(side.A*line.C - line.A*side.C)/(side.A*line.B - line.A*side.B);
 			
 			//Если точка пересечениялежит между точками стороны, вставляем ее в полигон
-			if(Check_side<T>(line, pt_1, 1) != Check_side<T>(line, pt_2, 1)) {
+			if((Check_side<T>(line, pt_1, 1) != Check_side<T>(line, pt_2, 1)) && (Check_side<T>(line, pt_1, 1) != 0) && (Check_side<T>(line, pt_2, 1) != 0)) {
 				base_triangle.pt_list.push_back(pt_inters);
 			}
 		}
@@ -181,7 +184,7 @@ template <typename T> bool cmp(Point_t<T> a, Point_t<T> b) {
 
 //Обрезаем треугольник по стороне
 template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line, int side) {
-	typename std::list<Point_t<T>>::iterator it_1 = triangle_base.pt_list.begin(), it_2 = ++(triangle_base.pt_list.begin());
+	typename std::vector<Point_t<T>>::iterator it_1 = triangle_base.pt_list.begin(), it_2 = ++(triangle_base.pt_list.begin());
 	Point_t<T> pt_1;
 	Line_t<T> line_base;
 	double const tol = 0.000001;
@@ -199,8 +202,6 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 				
 			if(it_2 != triangle_base.pt_list.end()) {
 				triangle_base.pt_list.erase(it_1);
-				it_1 = it_2;
-				++it_2;
 			}
 
 			else {
@@ -226,7 +227,7 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>& triangle_clip) {
 	Line_t<T> line;
 	Point_t<T> pt_1, pt_2;
-	typename std::list<Point_t<T>>::iterator it_1 = triangle_clip.pt_list.begin(), it_2 = ++(triangle_clip.pt_list.begin());
+	typename std::vector<Point_t<T>>::iterator it_1 = triangle_clip.pt_list.begin(), it_2 = ++(triangle_clip.pt_list.begin());
 		
 	while(true) {
 		Point_t<T> pt_1 = *it_1;
@@ -238,7 +239,7 @@ template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>
 		line.B = pt_2.x - pt_1.x;
 		line.C = pt_1.x*pt_2.y - pt_2.x*pt_1.y;
 		
-		Clip_line<T>(triangle_base, line, Ident_side(line, triangle_clip));
+		Clip_line<T>(triangle_base, line, triangle_clip.ident_side(line));
 			
 		it_1++;
 		it_2++;
@@ -246,35 +247,39 @@ template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>
 		if(it_2 == triangle_clip.pt_list.end()) it_2 = triangle_clip.pt_list.begin();
 		if(it_2 == ++(triangle_clip.pt_list.begin())) break;		
 	}
-	
+
+	if(triangle_base.pt_list.begin() == triangle_base.pt_list.end()) return 0;
+
 	triangle_base.go_to_centre();
 	
 	triangle_base.polar();
 
-	triangle_base.pt_list.sort([](auto x, auto y) { return cmp<T>(x, y); });
+	std::sort(triangle_base.pt_list.begin(), --triangle_base.pt_list.end(), [](auto x, auto y) { return cmp<T>(x, y);});
+
 	triangle_base.decart();	
 	//Проверить заполнение полигона по часовой стрелке - done
 	
 	return 0;
 }
 
-template <typename T> double S_poligon(Poligon_t<T>& poligon) {
+template <typename T> double Poligon_t<T>::s_decart() {
 	double S = 0.0;
-	typename std::list<Point_t<T>>::iterator it_1 = poligon.pt_list.begin(), it_2 = ++(poligon.pt_list.begin());
-	while(it_2 != poligon.pt_list.end()) {
+	typename std::vector<Point_t<T>>::iterator it_1 = pt_list.begin(), it_2 = ++(pt_list.begin());
+	if(it_1 == pt_list.end() || it_2 == pt_list.end()) return S;
+	while(it_2 != pt_list.end()) {
 		S = S + (it_1 -> x)*(it_2 -> y) - (it_2 -> x)*(it_1 -> y);
 		it_1++;
 		it_2++;
 	}
 	
-	it_1 = poligon.pt_list.begin();
-	it_2 = (--poligon.pt_list.end());
+	it_1 = pt_list.begin();
+	it_2 = (--pt_list.end());
 	S = (S + (it_2 -> x)*(it_1 -> y) - (it_1 -> x)*(it_2 -> y)) / 2.0;
 	if(S < 0) S = -S;
 	return S;
 }
 
-int main() {
+/*int main() {
 	double x_pt_1, y_pt_1, x_pt_2, y_pt_2, x_pt_3, y_pt_3;
 	double x_pt_4, y_pt_4, x_pt_5, y_pt_5, x_pt_6, y_pt_6;
 	double S = 0.0;
@@ -286,21 +291,21 @@ int main() {
 			pt_4(x_pt_4, y_pt_4), pt_5(x_pt_5, y_pt_5), pt_6(x_pt_6, y_pt_6);
 	
 	Poligon_t<double> triangle_1(pt_1, pt_2, pt_3), triangle_2(pt_4, pt_5, pt_6);
-	
+
 	Clip_poligon<double>(triangle_1, triangle_2);
-	
-	
-	/*std::list<Point_t<double>>::iterator it = triangle_1.pt_list.begin();
+		
+
+	*std::vector<Point_t<double>>::iterator it = triangle_1.pt_list.begin();
 	while(it != triangle_1.pt_list.end()) {
 		std::cout << it -> x << ";" << it -> y << "///";
 		it++;
 	}
 	
-	std::cout << std::endl;*/
+	std::cout << std::endl;*
 
 	S = S_poligon(triangle_1);
 
-	std::cout << "S: " << S << std::endl;
+	std::cout << S << std::endl;
 	
 	return 0;
-}
+}*/
