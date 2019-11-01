@@ -23,11 +23,34 @@ template <typename T> struct Line_t {
 template <typename T> struct Poligon_t {
 
         std::vector<Point_t<T>> pt_list;
+	Point_t<T> centre;
 
-        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) : pt_list{pnt_1, pnt_2, pnt_3} {};
+	Poligon_t() : pt_list() {};
+
+        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) : pt_list{pnt_1, pnt_2, pnt_3} {
+	
+	T sum_x = 0, sum_y = 0;
+        int count = 0;
+        auto it = pt_list.begin();
+        while(it != pt_list.end()) {
+                sum_x += it -> x;
+                sum_y += it -> y;
+                it++;
+                count++;
+        }
+
+        centre.x = sum_x/count;
+        centre.y = sum_y/count;
+	};
+
+	
+	int find_centre();
 
         //Переводим полигон в центр
         int go_to_centre();
+
+	//Go to old centre
+	int go_back();
 
 	//Переводим полигон из декартовых в полярные координаты
         int polar(); 
@@ -42,11 +65,12 @@ template <typename T> struct Poligon_t {
 	double s_decart();
 };
 
-
-template <typename T> int Poligon_t<T>::go_to_centre() {
-        T x_cntr, y_cntr, sum_x = 0, sum_y = 0;
+template <typename T> int Poligon_t<T>::find_centre() {
+	
+	T sum_x = 0, sum_y = 0;
         int count = 0;
         auto it = pt_list.begin();
+	assert((it != pt_list.end()) && (it != pt_list.end()) && (it != ++(++pt_list.end())));
         while(it != pt_list.end()) {
                 sum_x += it -> x;
                 sum_y += it -> y;
@@ -54,13 +78,16 @@ template <typename T> int Poligon_t<T>::go_to_centre() {
                 count++;
         }
 
-        x_cntr = sum_x/count;
-        y_cntr = sum_y/count;
-        it = pt_list.begin();
+        centre.x = sum_x/count;
+        centre.y = sum_y/count;
+}
+
+template <typename T> int Poligon_t<T>::go_to_centre() {
+        auto it = pt_list.begin();
 
         while(it != pt_list.end()) {
-                it -> x = (it -> x) - x_cntr;
-                it -> y = (it -> y) - y_cntr;
+                it -> x = (it -> x) - centre.x;
+                it -> y = (it -> y) - centre.y;
                 it++;
         }
         return 0;
@@ -109,6 +136,17 @@ template <typename T> int Poligon_t<T>::ident_side(Line_t<T> line) {
         	assert(it != pt_list.end());
 	}
 
+}
+
+template <typename T> int Poligon_t<T>::go_back() {
+        auto it = pt_list.begin();
+
+        while(it != pt_list.end()) {
+                it -> x = (it -> x) + centre.x;
+                it -> y = (it -> y) + centre.y;
+                it++;
+        }
+        return 0;
 } 
 
 
@@ -146,7 +184,7 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 		side.A = pt_1.y - pt_2.y;
 		side.B = pt_2.x - pt_1.x;
 		side.C = pt_1.x*pt_2.y - pt_2.x*pt_1.y;
-
+		
 		//Если прямые параллельны или совпадают, ничего не делаем
 		if (((side.A*line.B - side.B*line.A) < tol) && ((side.B*line.A - side.A* line.B) < tol)); 
 
@@ -173,8 +211,7 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 
 //Сравниваем точки по углу, т.е. сортируем их по часовой стрелке
 template <typename T> bool cmp(Point_t<T> a, Point_t<T> b) {
-	//double tol = 0.000001;
-	if(((a.y + tol) < b.y) && ((a.y - tol) < b.y)) return true;
+	if((a.x + tol) < b.x) return true;
 	
 	else return false;
 }
@@ -214,6 +251,18 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 			it_2++;
 		}	
 	}
+	
+	copy_triangle.find_centre();
+
+	copy_triangle.go_to_centre();
+
+	copy_triangle.polar();
+
+	std::sort(copy_triangle.pt_list.begin(), copy_triangle.pt_list.end(), [](auto x, auto y) { return cmp<T>(x, y);});
+
+	copy_triangle.decart();	
+
+	copy_triangle.go_back();
 
 	Inters_triangle(copy_triangle, line, triangle_base);
 
@@ -235,7 +284,7 @@ template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>
 		line.A = pt_1.y - pt_2.y;
 		line.B = pt_2.x - pt_1.x;
 		line.C = pt_1.x*pt_2.y - pt_2.x*pt_1.y;
-		
+				
 		Clip_line<T>(triangle_base, line, triangle_clip.ident_side(line));
 			
 		it_1++;
@@ -246,12 +295,14 @@ template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>
 	}
 
 	if(triangle_base.pt_list.begin() == triangle_base.pt_list.end()) return 0;
-
+	
+	triangle_base.find_centre();
+	
 	triangle_base.go_to_centre();
 	
 	triangle_base.polar();
 
-	std::sort(triangle_base.pt_list.begin(), --triangle_base.pt_list.end(), [](auto x, auto y) { return cmp<T>(x, y);});
+	std::sort(triangle_base.pt_list.begin(), triangle_base.pt_list.end(), [](auto x, auto y) { return cmp<T>(x, y);});
 
 	triangle_base.decart();	
 	//Проверить заполнение полигона по часовой стрелке - done
