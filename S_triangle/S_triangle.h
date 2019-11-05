@@ -10,14 +10,14 @@ template <typename T> struct Point_t {
 
         T x, y;
 
-        Point_t(T X = 0, T Y = 0) : x(X), y(Y) {};
+        explicit Point_t(T X = 0, T Y = 0) : x(X), y(Y) {};
 };
 
 template <typename T> struct Line_t {
 
         T A, B, C;
 
-        Line_t(T a = 0, T b = 0, T c = 0) : A(a), B(b), C(c) {};
+        explicit Line_t(T a = 0, T b = 0, T c = 0) : A(a), B(b), C(c) {};
 };
 
 template <typename T> struct Poligon_t {
@@ -25,9 +25,9 @@ template <typename T> struct Poligon_t {
         std::vector<Point_t<T>> pt_list;
 	Point_t<T> centre;
 
-	Poligon_t() : pt_list() {};
+	explicit Poligon_t() : pt_list() {};
 
-        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) : pt_list{pnt_1, pnt_2, pnt_3} {
+        explicit Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) : pt_list{pnt_1, pnt_2, pnt_3} {
 	
 	T sum_x = 0, sum_y = 0;
         int count = 0;
@@ -43,29 +43,29 @@ template <typename T> struct Poligon_t {
         centre.y = sum_y/count;
 	};
 
-	
-	int find_centre();
+	//Find point inside poligon
+	void find_centre();
 
-        //Переводим полигон в центр
-        int go_to_centre();
+        //Replace poligon to centre
+        void go_to_centre();
 
-	//Go to old centre
-	int go_back();
+	//Replace poligon back to old position
+	void go_back();
 
-	//Переводим полигон из декартовых в полярные координаты
-        int polar(); 
+	//Convert poligon from decart to polar coords
+        void polar(); 
 
-        //Переводим полигон из полярных в декартовы координаты
-        int decart(); 
+        //Convert poligon from polar to decart coords
+        void decart(); 
 
-	//Находим с какой стороны от line лежит треугольник
-        int ident_side(Line_t<T> line);
+	//Find where take place other poligon from line
+        int ident_side(Line_t<T> line) const;
 
-	//Площадь треугольника в декартовых координатах
+	//Square poligon in decart coords
 	double s_decart();
 };
 
-template <typename T> int Poligon_t<T>::find_centre() {
+template <typename T> void Poligon_t<T>::find_centre() {
 	
 	T sum_x = 0, sum_y = 0;
         int count = 0;
@@ -82,7 +82,7 @@ template <typename T> int Poligon_t<T>::find_centre() {
         centre.y = sum_y/count;
 }
 
-template <typename T> int Poligon_t<T>::go_to_centre() {
+template <typename T> void Poligon_t<T>::go_to_centre() {
         auto it = pt_list.begin();
 
         while(it != pt_list.end()) {
@@ -90,10 +90,9 @@ template <typename T> int Poligon_t<T>::go_to_centre() {
                 it -> y = (it -> y) - centre.y;
                 it++;
         }
-        return 0;
 }
 
-template <typename T> int Poligon_t<T>::polar() {
+template <typename T> void Poligon_t<T>::polar() {
         auto it = pt_list.begin();
         T x, y;
         while(it != pt_list.end()) {
@@ -103,10 +102,9 @@ template <typename T> int Poligon_t<T>::polar() {
                 it -> y = sqrt(x*x + y*y);
                 it++;
         }
-        return 0;
 }
 
-template <typename T> int Poligon_t<T>::decart() {
+template <typename T> void Poligon_t<T>::decart() {
 	auto it = pt_list.begin();
         T x, y;
         while(it != pt_list.end()) {
@@ -116,11 +114,9 @@ template <typename T> int Poligon_t<T>::decart() {
                 it -> y = y*sin(x);
                 it++;
         }
-        
-	return 0;
 }
 
-template <typename T> int Poligon_t<T>::ident_side(Line_t<T> line) {
+template <typename T> int Poligon_t<T>::ident_side(Line_t<T> line) const {
 	
         auto it = pt_list.begin();
         Point_t<T> pt;
@@ -138,7 +134,7 @@ template <typename T> int Poligon_t<T>::ident_side(Line_t<T> line) {
 
 }
 
-template <typename T> int Poligon_t<T>::go_back() {
+template <typename T> void Poligon_t<T>::go_back() {
         auto it = pt_list.begin();
 
         while(it != pt_list.end()) {
@@ -146,10 +142,9 @@ template <typename T> int Poligon_t<T>::go_back() {
                 it -> y = (it -> y) + centre.y;
                 it++;
         }
-        return 0;
 } 
 
-
+//Check which side of the line the point lies
 template <typename T> int Check_side(Line_t<T> line, Point_t<T> pt, int right_side) {
 	//double const tol = 0.00001;
 	int side;
@@ -168,7 +163,7 @@ template <typename T> int Check_side(Line_t<T> line, Point_t<T> pt, int right_si
 	else return -1;
 }
 
-//Добавляем точки пересечения
+//Add points of intersec
 template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line, Poligon_t<T>& base_triangle) {
 
 	auto it_1 = triangle.pt_list.begin(), it_2 = ++(triangle.pt_list.begin());
@@ -177,7 +172,6 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 	//double const tol = 0.000001;
 	
 	if((it_1 == triangle.pt_list.end()) || (it_2 == triangle.pt_list.end())) return 0;	
-//Переписать с учетом сравнения для double - done
 	while(true) {
 		pt_1 = *it_1;
 		pt_2 = *it_2;
@@ -185,14 +179,14 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 		side.B = pt_2.x - pt_1.x;
 		side.C = pt_1.x*pt_2.y - pt_2.x*pt_1.y;
 		
-		//Если прямые параллельны или совпадают, ничего не делаем
+		//If lines are parallel or equel then do  nothing
 		if (((side.A*line.B - side.B*line.A) < tol) && ((side.B*line.A - side.A* line.B) < tol)); 
 
 		else {
 			pt_inters.x = -(side.C*line.B - line.C*side.B)/(side.A*line.B - line.A*side.B);
 			pt_inters.y = -(side.A*line.C - line.A*side.C)/(side.A*line.B - line.A*side.B);
 			
-			//Если точка пересечениялежит между точками стороны, вставляем ее в полигон
+			//If point of intersec take place behind side points then add it into poligon
 			if((Check_side<T>(line, pt_1, 1) != Check_side<T>(line, pt_2, 1)) && (Check_side<T>(line, pt_1, 1) != 0) && (Check_side<T>(line, pt_2, 1) != 0)) {
 				base_triangle.pt_list.push_back(pt_inters);
 			}
@@ -209,22 +203,22 @@ template <typename T> int Inters_triangle(Poligon_t<T>& triangle, Line_t<T> line
 	return 0;
 }
 
-//Сравниваем точки по углу, т.е. сортируем их по часовой стрелке
+//Compare points by angle(sort it in clock wise or counter clock wise)
 template <typename T> bool cmp(Point_t<T> a, Point_t<T> b) {
 	if((a.x + tol) < b.x) return true;
 	
 	else return false;
 }
 
-//Обрезаем треугольник по стороне
+//Cut triangle on side
 template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line, int side) {
 	auto it_1 = triangle_base.pt_list.begin(), it_2 = ++(triangle_base.pt_list.begin());
 	Point_t<T> pt_1;
 	Line_t<T> line_base;
 	//double const tol = 0.000001;
 	Poligon_t<T> copy_triangle = triangle_base;
-	//Треугольник-база используется здесь как полигон пересечения, треугольник который там лежал сохраняется в copy_triangle	
-	//Выкидываем точки, которые лежат не с той стороны
+	//Triangle-base use there how intersec poligon, poligon before erase points save in copy_triangle	
+	//Erase points which take place on wrong side
 	
 	
 	if((it_1 == triangle_base.pt_list.end()) || (it_2 == triangle_base.pt_list.end())) return 0;	
@@ -251,7 +245,8 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 			it_2++;
 		}	
 	}
-	
+
+	//Sort polinom after ever change	
 	copy_triangle.find_centre();
 
 	copy_triangle.go_to_centre();
@@ -269,7 +264,7 @@ template <typename T> int Clip_line(Poligon_t<T>& triangle_base, Line_t<T> line,
 	return 0;
 }
 
-//Обрезаем один треугольник по другому, чтобы получить список точек многоугольника(пересечения треугольников)
+//Cut one triangle by another to find list of points of intersec of triangles
 template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>& triangle_clip) {
 	Line_t<T> line;
 	Point_t<T> pt_1, pt_2;
@@ -305,7 +300,6 @@ template <typename T> int Clip_poligon(Poligon_t<T>& triangle_base, Poligon_t<T>
 	std::sort(triangle_base.pt_list.begin(), triangle_base.pt_list.end(), [](auto x, auto y) { return cmp<T>(x, y);});
 
 	triangle_base.decart();	
-	//Проверить заполнение полигона по часовой стрелке - done
 	
 	return 0;
 }
