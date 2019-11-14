@@ -6,21 +6,21 @@
 
 double const tol = 0.000001;
 
-template <typename T> struct Point_t {
+template <typename T> struct Point_t final {
 
         T x, y;
 
         explicit Point_t(T X = 0, T Y = 0) : x(X), y(Y) {};
 };
 
-template <typename T> struct Line_t {
+template <typename T> struct Line_t final {
 
         T A, B, C;
 
         explicit Line_t(T a = 0, T b = 0, T c = 0) : A(a), B(b), C(c) {};
 };
 
-template <typename T> struct Poligon_t {
+template <typename T> struct Poligon_t final {
 
         std::vector<Point_t<T>> pt_list;
 	Point_t<T> centre;
