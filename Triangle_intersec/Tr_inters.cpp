@@ -48,10 +48,8 @@ template <typename T> double Find_max_tr(const std::vector<Poligon_t<T>>& tr_vec
 }
 
 template <typename T> bool cmp_tr (const Poligon_t<T>& a, const Poligon_t<T>& b) {
-	double centre_dist_a = a.centre.x*a.centre.x + a.centre.y*a.centre.y + a.centre.z*a.centre.z,
-	       centre_dist_b = b.centre.x*b.centre.x + b.centre.y*b.centre.y + b.centre.z*b.centre.z;
 
-	if(centre_dist_a < centre_dist_b) return true;
+	if(a.centre.x < b.centre.x) return true;
 
 	else return false;
 }
@@ -81,16 +79,16 @@ int main() {
 
 			if(j == i) continue;
 
-			double centre_dist_i = sqrt(tr_vector[i].centre.x*tr_vector[i].centre.x + tr_vector[i].centre.y*tr_vector[i].centre.y + tr_vector[i].centre.z*tr_vector[i].centre.z),
-			       centre_dist_j = sqrt(tr_vector[j].centre.x*tr_vector[j].centre.x + tr_vector[j].centre.y*tr_vector[j].centre.y + tr_vector[j].centre.z*tr_vector[j].centre.z);
+			//double centre_dist_i = sqrt(tr_vector[i].centre.x*tr_vector[i].centre.x + tr_vector[i].centre.y*tr_vector[i].centre.y + tr_vector[i].centre.z*tr_vector[i].centre.z),
+			//       centre_dist_j = sqrt(tr_vector[j].centre.x*tr_vector[j].centre.x + tr_vector[j].centre.y*tr_vector[j].centre.y + tr_vector[j].centre.z*tr_vector[j].centre.z);
 
-			if(centre_dist_j < centre_dist_i - 2.0 * max_dist) {
+			if(tr_vector[j].centre.x < tr_vector[i].centre.x - 2.0 * max_dist) {
 				j_mem = j;
 			}
 
 			else{
 
-			if(centre_dist_j > centre_dist_i + 2.0 * max_dist) {break;}
+			if(tr_vector[j].centre.x > tr_vector[i].centre.x + 2.0 * max_dist) {break;}
 
 			else{
 
@@ -163,19 +161,23 @@ int main() {
 		}
 	}
 
-	std::ofstream res;
-	res.open("tests/res_new.txt");
+	/*std::ofstream res;
+	res.open("tests/res.txt");
 
 	for(int i = 0; i < num; i++) {
 		if(tr_vector[i].color == 1) res << tr_vector[i].idx << std::endl;
 	}
 	
-	res.close();
+	res.close();*/
+
+	for(int i = 0; i < num; i++) {
+		if(tr_vector[i].color == 1) std::cout << tr_vector[i].idx << std::endl;
+	}
 	
 
 	double end = clock();
 	double time = (end - start)/CLOCKS_PER_SEC;
-	std::cout << "time: " << time << std::endl;
+	//std::cout << "time: " << time << std::endl;
 
 	return 0;
 }
