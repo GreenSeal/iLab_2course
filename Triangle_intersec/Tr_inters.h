@@ -70,24 +70,50 @@ template <typename T> struct Plane_t final {
 template <typename T> struct Poligon_t final {
 
         std::vector<Point_t<T>> pt_vector;
+	Point_t<T> centre;
 	int color;
 
-	explicit Poligon_t(int col = 0) : pt_vector(), color(col) {};
+	explicit Poligon_t(int col = 0) : pt_vector{}, color(col), centre{0, 0, 0} {};
 
-        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3, int col = 0) : pt_vector{pnt_1, pnt_2, pnt_3}, color(col) {};
+        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3, int col = 0) : pt_vector{pnt_1, pnt_2, pnt_3}, color(col) {
+		T sum_x = 0, sum_y = 0, sum_z = 0;
+		int count = 0;
+		auto it = pt_vector.begin();
+		while(it != pt_vector.end()) {
+			sum_x += it -> x;
+			sum_y += it -> y;
+			sum_z += it -> z;
+			it++;
+			count++;
+		}
+
+		centre.x = sum_x/count;
+		centre.y = sum_y/count;
+		centre.z = sum_z/count;
+	};
 
 	//Find where take place other poligon from line
         int ident_side(Plane_t<T> plane) const;
 };
 
 //Are you sure that += doesn't change rgh_pnt
-template <typename T> Point_t<T> operator+(const Point_t<T>& lft_pnt, const Point_t<T> rgh_pnt) {
+template <typename T> Point_t<T> operator+(const Point_t<T>& lft_pnt, const Point_t<T>& rgh_pnt) {
 	Point_t<T> buf{lft_pnt};
-	Point_t<T>check_pnt = rgh_pnt;
+	
 	buf.x += rgh_pnt.x;
 	buf.y += rgh_pnt.y;
 	buf.z += rgh_pnt.z;
-	assert(check_pnt.x == rgh_pnt.x && check_pnt.y == rgh_pnt.y && check_pnt.z == rgh_pnt.z);
+	
+	return buf;
+}
+
+template <typename T> Point_t<T> operator-(const Point_t<T>& lft_pnt, const Point_t<T>& rgh_pnt) {
+	Point_t<T> buf{lft_pnt};
+	
+	buf.x -= rgh_pnt.x;
+	buf.y -= rgh_pnt.y;
+	buf.z -= rgh_pnt.z;
+	
 	return buf;
 }
 

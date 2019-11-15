@@ -1,5 +1,7 @@
 #include"Tr_inters.h"
 #include<fstream>
+#include<ctime>
+
 
 template <typename T> Point_t<T> Find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr) {
 	int res_1 = Check_side(plane, tr.pt_vector[0], 1),
@@ -16,26 +18,28 @@ template <typename T> Point_t<T> Find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr
 	
 }
 
-template <typename T> void Insert_tr(Poligon_t<T> * tr_vector, int num) {
+template <typename T> void Insert_tr(std::vector<Poligon_t<T>>& tr_vector, int num) {
 	
 	for(int i  = 0; i < num; i++) {
 		
-		Point_t<double> pnt_1, pnt_2, pnt_3;
+		Point_t<T> pnt_1, pnt_2, pnt_3;
 		std::cin >> pnt_1.x >> pnt_1.y >> pnt_1.z 
 			 >> pnt_2.x >> pnt_2.y >> pnt_2.z
 			 >> pnt_3.x >> pnt_3.y >> pnt_3.z;
 
-		Poligon_t<double> triangle(pnt_1, pnt_2, pnt_3);
+		Poligon_t<T> triangle(pnt_1, pnt_2, pnt_3);
 		
-		tr_vector[i] = triangle;
+		tr_vector.push_back(triangle);
 	}
 }
 
 int main() {
+
+	double start = clock();
 	int num;
 	std::cin >> num;
 
-	Poligon_t<double> * tr_vector = new Poligon_t<double>[num];
+	std::vector<Poligon_t<double>> tr_vector;
 
 	//Insert triangles
 	
@@ -109,17 +113,18 @@ int main() {
 	}
 
 	std::ofstream res;
-	res.open("tests/5.res");
+	res.open("tests/res.txt");
 
 	for(int i = 0; i < num; i++) {
 		if(tr_vector[i].color == 1) res << i << std::endl;
 	}
 	
 	res.close();
+	
 
-
-	delete [] tr_vector;
-
+	double end = clock();
+	double time = (end - start)/CLOCKS_PER_SEC;
+	std::cout << "time: " << time << std::endl;
 
 	return 0;
 }
