@@ -27,16 +27,39 @@ template <typename T> void Insert_tr(std::vector<Poligon_t<T>>& tr_vector, int n
 			 >> pnt_2.x >> pnt_2.y >> pnt_2.z
 			 >> pnt_3.x >> pnt_3.y >> pnt_3.z;
 
-		Poligon_t<T> triangle(pnt_1, pnt_2, pnt_3);
+		Poligon_t<T> triangle(pnt_1, pnt_2, pnt_3, i);
 		
 		tr_vector.push_back(triangle);
 	}
 }
 
+template <typename T> double Find_max_tr(const std::vector<Poligon_t<T>>& tr_vector, int num) {
+	double max_dist = 0, buf_dist = 0;
+	
+	for(int i = 0; i < num; i++) {
+		for(int j = 0; j < 3; j++) {
+			Point_t<T> buf_pnt = tr_vector[i].pt_vector[j] - tr_vector[i].centre;
+			buf_dist = sqrt(buf_pnt.x*buf_pnt.x + buf_pnt.y*buf_pnt.y + buf_pnt.z*buf_pnt.z);
+			if (buf_dist > max_dist) max_dist = buf_dist;
+		}
+	}
+
+	return max_dist;
+}
+
+template <typename T> bool cmp_tr (const Poligon_t<T>& a, const Poligon_t<T>& b) {
+	double centre_dist_a = a.centre.x*a.centre.x + a.centre.y*a.centre.y + a.centre.z*a.centre.z,
+	       centre_dist_b = b.centre.x*b.centre.x + b.centre.y*b.centre.y + b.centre.z*b.centre.z;
+
+	if(centre_dist_a < centre_dist_b) return true;
+
+	else return false;
+}
+
 int main() {
 
 	double start = clock();
-	int num;
+	int num, j_mem = 0;
 	std::cin >> num;
 
 	std::vector<Poligon_t<double>> tr_vector;
@@ -45,15 +68,40 @@ int main() {
 	
 	Insert_tr(tr_vector, num);
 
+	double max_dist = Find_max_tr(tr_vector, num);
+
+	std::sort(tr_vector.begin(), tr_vector.end(), [](auto x, auto y) {return cmp_tr(x, y);});
+
 	for(int i = 0; i < num; i++) {
 
 		//Build plane on main triagnle
 		Plane_t<double> tr_plane(tr_vector[i].pt_vector[0], tr_vector[i].pt_vector[1], tr_vector[i].pt_vector[2]);
 
-		for(int j = 0; j < num; j++) {
+		for(int j = j_mem; j < num; j++) {
 
 			if(j == i) continue;
 
+			double centre_dist_i = sqrt(tr_vector[i].centre.x*tr_vector[i].centre.x + tr_vector[i].centre.y*tr_vector[i].centre.y + tr_vector[i].centre.z*tr_vector[i].centre.z),
+			       centre_dist_j = sqrt(tr_vector[j].centre.x*tr_vector[j].centre.x + tr_vector[j].centre.y*tr_vector[j].centre.y + tr_vector[j].centre.z*tr_vector[j].centre.z);
+
+			if(centre_dist_j < centre_dist_i - 2.0 * max_dist) {
+				j_mem = j;
+			}
+
+			else{
+
+			if(centre_dist_j > centre_dist_i + 2.0 * max_dist) {break;}
+
+			else{
+
+			Point_t<double> pnt_dist = tr_vector[j].centre - tr_vector[i].centre;
+			double tr_dist = sqrt(pnt_dist.x*pnt_dist.x + pnt_dist.y*pnt_dist.y + pnt_dist.z*pnt_dist.z);
+
+			if(tr_dist > 2.0 * max_dist) {}
+
+			else {
+			       
+			
 			//If point lies on different side of main plane, then triangles don't intersec
 			if(Check_side(tr_plane, tr_vector[j].pt_vector[0], 1) == Check_side(tr_plane, tr_vector[j].pt_vector[1], 1) 
 			&& Check_side(tr_plane, tr_vector[j].pt_vector[1], 1) == Check_side(tr_plane, tr_vector[j].pt_vector[2], 1)) {}
@@ -108,15 +156,18 @@ int main() {
 					}
 				}
 			}
+			}
+			}
+			}
 
 		}
 	}
 
 	std::ofstream res;
-	res.open("tests/res.txt");
+	res.open("tests/res_new.txt");
 
 	for(int i = 0; i < num; i++) {
-		if(tr_vector[i].color == 1) res << i << std::endl;
+		if(tr_vector[i].color == 1) res << tr_vector[i].idx << std::endl;
 	}
 	
 	res.close();

@@ -71,11 +71,11 @@ template <typename T> struct Poligon_t final {
 
         std::vector<Point_t<T>> pt_vector;
 	Point_t<T> centre;
-	int color;
+	int color, idx;
 
-	explicit Poligon_t(int col = 0) : pt_vector{}, color(col), centre{0, 0, 0} {};
+	explicit Poligon_t(int col = 0, int Idx = 0) : pt_vector{}, color(col), centre{0, 0, 0}, idx(Idx) {};
 
-        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3, int col = 0) : pt_vector{pnt_1, pnt_2, pnt_3}, color(col) {
+        Poligon_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3, int Idx = 0, int col = 0) : pt_vector{pnt_1, pnt_2, pnt_3}, color(col), idx(Idx) {
 		T sum_x = 0, sum_y = 0, sum_z = 0;
 		int count = 0;
 		auto it = pt_vector.begin();
