@@ -34,14 +34,14 @@ int main() {
 
 	tr_space.find_inters_tr();
 
-	/*for(int i = 0; i < num; i++) {
+	for(int i = 0; i < num; i++) {
 		if(tr_space.tr_vector[i].color == 1) std::cout << tr_space.tr_vector[i].idx << std::endl;
-	}*/
+	}
 	
 
 	double end = clock();
 	double time = (end - start)/CLOCKS_PER_SEC;
-	std::cout << "time: " << time << std::endl;
+	//std::cout << "time: " << time << std::endl;
 
 	return 0;
 }
