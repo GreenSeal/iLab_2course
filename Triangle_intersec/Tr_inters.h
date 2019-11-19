@@ -13,6 +13,27 @@ template <typename T> struct Point_t final {
         explicit Point_t(T X = 0, T Y = 0, T Z = 0) : x(X), y(Y), z(Z) {};
 };
 
+
+template <typename T> Point_t<T> operator+(const Point_t<T>& lft_pnt, const Point_t<T>& rgh_pnt) {
+	Point_t<T> buf{lft_pnt};
+	
+	buf.x += rgh_pnt.x;
+	buf.y += rgh_pnt.y;
+	buf.z += rgh_pnt.z;
+	
+	return buf;
+}
+
+template <typename T> Point_t<T> operator-(const Point_t<T>& lft_pnt, const Point_t<T>& rgh_pnt) {
+	Point_t<T> buf{lft_pnt};
+	
+	buf.x -= rgh_pnt.x;
+	buf.y -= rgh_pnt.y;
+	buf.z -= rgh_pnt.z;
+	
+	return buf;
+}
+
 template <typename T> struct Line_t final {
 
         T a_x, a_y, a_z, x, y, z;
@@ -42,30 +63,79 @@ template <typename T> struct Plane_t final {
 		    pnt_1.z*((pnt_2.y-pnt_1.y)*(pnt_3.x-pnt_1.x) - (pnt_2.x-pnt_1.x)*(pnt_3.y-pnt_1.y));
 	};
 
-	double dist_point(Point_t<T> pnt) {
-		double dist;
-		dist = (A*pnt.x + B*pnt.y + C*pnt.z + D)/sqrt(A*A + B*B + C*C);
-		if(dist < 0) dist = -dist;
-		return dist;
-	};
+	//Check which side of the line the point lie
+	int check_side(Point_t<T> pnt, int right_side);
 
-	double angle_line(Line_t<T> line) {
-		double sin_angle;
-		sin_angle = (line.a_x*A + line.a_y*B + line.a_z*C)/(sqrt(A*A + B*B + C*C) * sqrt(line.a_x*line.a_x + line.a_y*line.a_y + line.a_z*line.a_z));
-		if(sin_angle < 0) sin_angle = -sin_angle;
-		return sin_angle;
-	};
+	//Find distanse btw plane and point
+	double dist_point(Point_t<T> pnt);
+	
+	//Find angle btw plane and line
+	double angle_line(Line_t<T> line);
 
-	Point_t<T> pnt_inters_line(Line_t<T> line) {
-		double sin_a = angle_line(line);
-		Point_t<T> line_pnt{line.x, line.y, line.z};
-		double dist = dist_point(line_pnt);
-		double lengh = dist/sin_a;
-		Point_t<T> diff{line.a_x*lengh, line.a_y*lengh, line.a_z*lengh};
-		Point_t<T> pnt_inters{line_pnt.x + diff.x, line_pnt.y + diff.y, line.z + diff.z};
-		return pnt_inters;
-	};
+	//Find points of intersec of plane and line
+	Point_t<T> pnt_inters_line(Line_t<T> line);
+
+	//Find pnt which lies alone in her side
+	//Point_t<T> find_lone_pnt(Poligon_t<T> tr);
 };
+
+
+template <typename T> int Plane_t<T>::check_side(Point_t<T> pt, int right_side) {
+	int side;
+	if((A*pt.x + B*pt.y + C*pt.z + D - tol) > 0) side = 1;
+	
+	else {
+		if((A*pt.x + B*pt.y + C*pt.z + D + tol) < 0) side = -1;
+		
+		else side = 0;
+	}
+
+	if(side == 0) return 0;
+	
+	if(right_side == side) return 1;
+	
+	else return -1;
+}
+
+template <typename T> double Plane_t<T>::dist_point(Point_t<T> pnt) {
+	double dist;
+	dist = (A*pnt.x + B*pnt.y + C*pnt.z + D)/sqrt(A*A + B*B + C*C);
+	if(dist < 0) dist = -dist;
+	return dist;
+}
+
+template <typename T> double Plane_t<T>::angle_line(Line_t<T> line) {
+	double sin_angle;
+	sin_angle = (line.a_x*A + line.a_y*B + line.a_z*C)/(sqrt(A*A + B*B + C*C) * sqrt(line.a_x*line.a_x + line.a_y*line.a_y + line.a_z*line.a_z));
+	if(sin_angle < 0) sin_angle = -sin_angle;
+	return sin_angle;
+}
+
+
+template <typename T> Point_t<T> Plane_t<T>::pnt_inters_line(Line_t<T> line) {
+	double sin_a = angle_line(line);
+	Point_t<T> line_pnt{line.x, line.y, line.z};
+	double dist = dist_point(line_pnt);
+	double lengh = dist/sin_a;
+	Point_t<T> diff{line.a_x*lengh, line.a_y*lengh, line.a_z*lengh};
+	Point_t<T> pnt_inters{line_pnt.x + diff.x, line_pnt.y + diff.y, line.z + diff.z};
+	return pnt_inters;
+}
+
+/*template <typename T> Point_t<T> Plane_t<T>::find_lone_pnt(Poligon_t<T> tr) {
+	
+	int res_1 = plane.check_side(tr.pt_vector[0], 1),
+	    res_2 = plane.check_side(tr.pt_vector[1], 1),
+	    res_3 = plane.check_side(tr.pt_vector[2], 1);
+
+	if(res_1 == res_2) return tr.pt_vector[2];
+	
+	else {
+		if(res_1 == res_3) return tr.pt_vector[1];
+		
+		else return tr.pt_vector[0];
+	}
+}*/
 
 template <typename T> struct Poligon_t final {
 
@@ -94,29 +164,9 @@ template <typename T> struct Poligon_t final {
 
 	//Find where take place other poligon from line
         int ident_side(Plane_t<T> plane) const;
+
+	Plane_t<T> get_plane() const;
 };
-
-//Are you sure that += doesn't change rgh_pnt
-template <typename T> Point_t<T> operator+(const Point_t<T>& lft_pnt, const Point_t<T>& rgh_pnt) {
-	Point_t<T> buf{lft_pnt};
-	
-	buf.x += rgh_pnt.x;
-	buf.y += rgh_pnt.y;
-	buf.z += rgh_pnt.z;
-	
-	return buf;
-}
-
-template <typename T> Point_t<T> operator-(const Point_t<T>& lft_pnt, const Point_t<T>& rgh_pnt) {
-	Point_t<T> buf{lft_pnt};
-	
-	buf.x -= rgh_pnt.x;
-	buf.y -= rgh_pnt.y;
-	buf.z -= rgh_pnt.z;
-	
-	return buf;
-}
-
 
 template <typename T> int Poligon_t<T>::ident_side(Plane_t<T> plane) const {
 	
@@ -135,23 +185,155 @@ template <typename T> int Poligon_t<T>::ident_side(Plane_t<T> plane) const {
 
 }
 
+template <typename T> Plane_t<T> Poligon_t<T>::get_plane() const {
+	Plane_t<T> plane{pt_vector[0], pt_vector[1], pt_vector[2]};
+	return plane;
+}
 
-//Check which side of the line the point lies
-template <typename T> int Check_side(Plane_t<T> plane, Point_t<T> pt, int right_side) {
-	int side;
-	if((plane.A*pt.x + plane.B*pt.y + plane.C*pt.z + plane.D - tol) > 0) side = 1;
+template <typename T> struct Space_t final {
+	
+	std::vector<Poligon_t<T>> tr_vector;
+	int num;
+	double max_dist;
+
+	void find_max_tr();
+	Point_t<T> find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr);
+	int is_near(int i, int j, int& j_mem);
+	int is_mb_inters(Plane_t<T> tr_plane, int j);
+	bool cmp_tr(const Poligon_t<T>& a, const Poligon_t<T>& b);
+	void check_inters(Plane_t<T> tr_plane, int i, int j);
+	void find_inters_tr();
+		
+};
+
+template <typename T> void Space_t<T>::find_max_tr() {
+	double max_dist_buf = 0, buf_dist = 0;
+
+	for(int i = 0; i < num; i++) {
+		for(int j = 0; j < 3; j++) {
+			Point_t<T> buf_pnt = tr_vector[i].pt_vector[j] - tr_vector[i].centre;
+			buf_dist = sqrt(buf_pnt.x*buf_pnt.x + buf_pnt.y*buf_pnt.y + buf_pnt.z*buf_pnt.z);
+			if(buf_dist > max_dist_buf) max_dist_buf = buf_dist;
+		}
+	}
+	max_dist = max_dist_buf;
+}
+
+template <typename T> bool Space_t<T>::cmp_tr(const Poligon_t<T>& a, const Poligon_t<T>& b) {
+	return(a.centre.x < b.centre.x);
+}
+
+template <typename T> Point_t<T> Space_t<T>::find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr) {
+	
+	int res_1 = plane.check_side(tr.pt_vector[0], 1),
+	    res_2 = plane.check_side(tr.pt_vector[1], 1),
+	    res_3 = plane.check_side(tr.pt_vector[2], 1);
+
+	if(res_1 == res_2) return tr.pt_vector[2];
 	
 	else {
-		if((plane.A*pt.x + plane.B*pt.y + plane.C*pt.z + plane.D + tol) < 0) side = -1;
+		if(res_1 == res_3) return tr.pt_vector[1];
 		
-		else side = 0;
+		else return tr.pt_vector[0];
+	}
+}
+
+template <typename T> int Space_t<T>::is_near(int i, int j, int& j_mem) {
+	if(j == i) return 0;
+	if(tr_vector[j].centre.x < tr_vector[i].centre.x - 2.0 * max_dist) {
+		j_mem = j;
+		return 0;
 	}
 
-	if(side == 0) return 0;
-	
-	if(right_side == side) return 1;
-	
-	else return -1;
+	if(tr_vector[j].centre.x > tr_vector[i].centre.x + 2.0 * max_dist) return -1;
+	Point_t<T> pnt_dist= tr_vector[j].centre - tr_vector[i].centre;
+	double tr_dist = sqrt(pnt_dist.x*pnt_dist.x + pnt_dist.y*pnt_dist.y + pnt_dist.z*pnt_dist.z);
+
+	if(tr_dist > 2.0 * max_dist) return 0;
+
+	return 1;
+}
+
+template <typename T> int Space_t<T>::is_mb_inters(Plane_t<T> tr_plane, int j) {
+	if((tr_plane.check_side(tr_vector[j].pt_vector[0], 1) == tr_plane.check_side(tr_vector[j].pt_vector[1], 1)) 
+	&& (tr_plane.check_side(tr_vector[j].pt_vector[1], 1) == tr_plane.check_side(tr_vector[j].pt_vector[2], 1))) return 0;
+
+	return 1;
+}
+
+template <typename T> void Space_t<T>::check_inters(Plane_t<T> tr_plane, int i, int j) {
+	if(is_mb_inters(tr_plane, j) == 1) {
+		
+		//Find one point which lies alone on her side
+		Point_t<T> lonely_pnt = find_lone_pnt(tr_plane, tr_vector[j]);
+				
+		std::vector<Line_t<T>> sides;
+
+		//Find sides which intersec main plane
+		for(int k = 0; k < 3; k++) {
+			Line_t<T> side(lonely_pnt, tr_vector[j].pt_vector[k]);
+
+			if(side.a_x == side.a_x || side.a_y == side.a_y || side.a_z == side.a_z) sides.push_back(side);
+		}
+
+		//Find points which are intersec sides and main plane
+		Point_t<T> pnt_segm_1, pnt_segm_2;
+		pnt_segm_1 = tr_plane.pnt_inters_line(sides[0]);
+		pnt_segm_2 = tr_plane.pnt_inters_line(sides[1]);
+
+		//Vector of normal to main plane
+		Point_t<T> norm_vec{tr_plane.A, tr_plane.B, tr_plane.C};
+
+		Point_t<T> pnt_dop_1{}, pnt_dop_2{}, pnt_dop_3{}, pnt_dop_segm{};
+		pnt_dop_1 = tr_vector[i].pt_vector[0] + norm_vec;
+		pnt_dop_2 = tr_vector[i].pt_vector[1] + norm_vec;
+		pnt_dop_3 = tr_vector[i].pt_vector[2] + norm_vec;
+		pnt_dop_segm = pnt_segm_1 + norm_vec;
+
+		//Build planes perpendicular sides and segment of intersec
+		Plane_t<T> side_plane_1{tr_vector[i].pt_vector[0], tr_vector[i].pt_vector[1], pnt_dop_1};
+		Plane_t<T> side_plane_2{tr_vector[i].pt_vector[1], tr_vector[i].pt_vector[2], pnt_dop_2};
+		Plane_t<T> side_plane_3{tr_vector[i].pt_vector[2], tr_vector[i].pt_vector[0], pnt_dop_3};
+		Plane_t<T> segm_plane{pnt_segm_1, pnt_segm_2, pnt_dop_segm};
+
+
+		std::vector<Plane_t<double>> side_planes = {side_plane_1, side_plane_2, side_plane_3};
+
+		//For more convenient sort out of points
+		std::vector<Point_t<double>> pnt_vector = {tr_vector[i].pt_vector[0], tr_vector[i].pt_vector[1], tr_vector[i].pt_vector[2], tr_vector[i].pt_vector[0]};
+
+		for(int k = 0; k < 3; k++) {
+			if(side_planes[k].check_side(pnt_segm_1, 1) != side_planes[k].check_side(pnt_segm_2, 1) 
+			&& segm_plane.check_side(pnt_vector[k], 1) != segm_plane.check_side(pnt_vector[k+1], 1)) {
+						
+				//std::cout << i << " inters with " << j << std::endl;
+				tr_vector[i].color = 1;
+				tr_vector[j].color = 1;
+			}
+		}
+	}
+}
+
+template <typename T> void Space_t<T>::find_inters_tr() {
+	int j_mem = 0;
+	find_max_tr();
+	std::sort(tr_vector.begin(), tr_vector.end(), [this](auto x, auto y) {return cmp_tr(x, y);});
+
+	for(int i = 0; i < num; i++) {
+		Plane_t<T> tr_plane = tr_vector[i].get_plane();
+
+		for(int j = j_mem; j < num; j++) {
+			if(is_near(i, j, j_mem) == -1) break;
+
+			else {
+				if(is_near(i, j, j_mem) == 1) {	
+					check_inters(tr_plane, i, j);
+				}
+
+				else {}
+			}
+		}
+	}
 }
 
 /*std::vector<Point_t<double>>::iterator it = triangle_1.pt_list.begin();
