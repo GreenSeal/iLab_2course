@@ -6,11 +6,20 @@
 
 double const tol = 0.000001;
 
+namespace Space_3D {
 template <typename T> struct Point_t final {
 
         T x, y, z;
 
         explicit Point_t(T X = 0, T Y = 0, T Z = 0) : x(X), y(Y), z(Z) {};
+
+	double mod() {
+		return sqrt(x*x + y*y + z*z);
+	};
+
+	void dump(std::istream& is) {
+		is >> x >> y >> z;
+	};
 };
 
 
@@ -34,6 +43,17 @@ template <typename T> Point_t<T> operator-(const Point_t<T>& lft_pnt, const Poin
 	return buf;
 }
 
+template <typename T> std::istream& operator>>(std::istream& is, Point_t<T>& pnt) {
+	pnt.dump(is);
+	return is;
+}
+
+template <typename T> int operator==(const Point_t<T>& pt1, const Point_t<T>& pt2) {
+	if((pt1.x < pt2.x + tol) && (pt1.x > pt2.x - tol) && (pt1.y < pt2.y + tol) && (pt1.y > pt2.y - tol) && (pt1.z < pt2.z + tol) && (pt1.z > pt2.z - tol)) return 1;
+
+	return 0;
+}
+
 template <typename T> struct Line_t final {
 
         T a_x, a_y, a_z, x, y, z;
@@ -41,10 +61,10 @@ template <typename T> struct Line_t final {
         explicit Line_t(T A_x = 0, T A_y = 0, T A_z = 0, T X = 0, T Y = 0, T Z = 0) : a_x(A_x), a_y(A_y), a_z(A_z), x(X), y(Y), z(Z) {};
 
 	Line_t(Point_t<T> pnt_1, Point_t<T> pnt_2) : x(pnt_1.x), y(pnt_1.y), z(pnt_1.z) {
-		double vec_mod = sqrt((pnt_2.x-pnt_1.x)*(pnt_2.x-pnt_1.x) + (pnt_2.y-pnt_1.y)*(pnt_2.y-pnt_1.y) + (pnt_2.z-pnt_1.z)*(pnt_2.z-pnt_1.z));
-		a_x = (pnt_2.x - pnt_1.x)/vec_mod;
-		a_y = (pnt_2.y - pnt_1.y)/vec_mod;
-		a_z = (pnt_2.z - pnt_1.z)/vec_mod;
+		Point_t<T> vec = pnt_2 - pnt_1;
+		a_x = vec.x/vec.mod();
+		a_y = vec.y/vec.mod();
+		a_z = vec.z/vec.mod();
 	};
 };
 
@@ -54,13 +74,13 @@ template <typename T> struct Plane_t final {
 	explicit Plane_t (T a = 0, T b = 0, T c = 0, T d = 0) : A(a), B(b), C(c), D(d) {};
 	
 	Plane_t(Point_t<T> pnt_1, Point_t<T> pnt_2, Point_t<T> pnt_3) {
+		Point_t<T> v1 = pnt_2 - pnt_1;
+		Point_t<T> v2 = pnt_3 - pnt_1;
 		
-		A = (pnt_2.y-pnt_1.y)*(pnt_3.z-pnt_1.z) - (pnt_3.y-pnt_1.y)*(pnt_2.z-pnt_1.z),
-		B = (pnt_2.z-pnt_1.z)*(pnt_3.x-pnt_1.x) - (pnt_2.x-pnt_1.x)*(pnt_3.z-pnt_1.z),
-		C = (pnt_2.x-pnt_1.x)*(pnt_3.y-pnt_1.y) - (pnt_2.y-pnt_1.y)*(pnt_3.x-pnt_1.x),
-		D = pnt_1.x*((pnt_3.y-pnt_1.y)*(pnt_2.z-pnt_1.z) - (pnt_2.y-pnt_1.y)*(pnt_3.z-pnt_1.z)) + 
-		    pnt_1.y*((pnt_2.x-pnt_1.x)*(pnt_3.z-pnt_1.z) - (pnt_2.z-pnt_1.z)*(pnt_3.x-pnt_1.x)) + 
-		    pnt_1.z*((pnt_2.y-pnt_1.y)*(pnt_3.x-pnt_1.x) - (pnt_2.x-pnt_1.x)*(pnt_3.y-pnt_1.y));
+		A = v1.y*v2.z - v2.y*v1.z;
+		B = v1.z*v2.x - v1.x*v2.z;
+		C = v1.x*v2.y - v1.y*v2.x;
+		D = pnt_1.x*(v2.y*v1.z - v1.y*v2.z) + pnt_1.y*(v1.x*v2.z - v1.z*v2.x) + pnt_1.z*(v1.y*v2.x - v1.x*v2.y);
 	};
 
 	//Check which side of the line the point lie
@@ -122,21 +142,6 @@ template <typename T> Point_t<T> Plane_t<T>::pnt_inters_line(Line_t<T> line) {
 	return pnt_inters;
 }
 
-/*template <typename T> Point_t<T> Plane_t<T>::find_lone_pnt(Poligon_t<T> tr) {
-	
-	int res_1 = plane.check_side(tr.pt_vector[0], 1),
-	    res_2 = plane.check_side(tr.pt_vector[1], 1),
-	    res_3 = plane.check_side(tr.pt_vector[2], 1);
-
-	if(res_1 == res_2) return tr.pt_vector[2];
-	
-	else {
-		if(res_1 == res_3) return tr.pt_vector[1];
-		
-		else return tr.pt_vector[0];
-	}
-}*/
-
 template <typename T> struct Poligon_t final {
 
         std::vector<Point_t<T>> pt_vector;
@@ -168,6 +173,12 @@ template <typename T> struct Poligon_t final {
 	Plane_t<T> get_plane() const;
 };
 
+template <typename T> int operator==(const Poligon_t<T>& tr1, const Poligon_t<T>& tr2) {
+	if(tr1.pt_vector[0] == tr2.pt_vector[0] && tr1.pt_vector[1] == tr2.pt_vector[1] && tr1.pt_vector[2] == tr2.pt_vector[2]) return 1;
+
+	return 0;
+}
+
 template <typename T> int Poligon_t<T>::ident_side(Plane_t<T> plane) const {
 	
         auto it = pt_vector.begin();
@@ -175,9 +186,9 @@ template <typename T> int Poligon_t<T>::ident_side(Plane_t<T> plane) const {
 	
 	while(true) {
                 pt = *it;
-                if((plane.A*pt.x + plane.B*pt.y + plane.C*pt.z + plane.D - tol) > 0.0) return 1;
+                if(plane.A*pt.x + plane.B*pt.y + plane.C*pt.z + plane.D - tol > 0.0) return 1;
 
-                if((plane.A*pt.x + plane.B*pt.y + plane.C*pt.z + plane.D + tol) < 0.0) return -1;
+                if(plane.A*pt.x + plane.B*pt.y + plane.C*pt.z + plane.D + tol < 0.0) return -1;
 
                 it++;
         	assert(it != pt_vector.end());
@@ -197,9 +208,9 @@ template <typename T> struct Space_t final {
 	double max_dist;
 
 	void find_max_tr();
-	Point_t<T> find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr);
-	int is_near(int i, int j, int& j_mem);
-	int is_mb_inters(Plane_t<T> tr_plane, int j);
+	Point_t<T> find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr) const;
+	int is_near(const Poligon_t<T>& tr_base, const Poligon_t<T>& tr_dop) const;
+	int is_mb_inters(Plane_t<T> tr_plane, int j) const;
 	bool cmp_tr(const Poligon_t<T>& a, const Poligon_t<T>& b);
 	void check_inters(Plane_t<T> tr_plane, int i, int j);
 	void find_inters_tr();
@@ -223,11 +234,11 @@ template <typename T> bool Space_t<T>::cmp_tr(const Poligon_t<T>& a, const Polig
 	return(a.centre.x < b.centre.x);
 }
 
-template <typename T> Point_t<T> Space_t<T>::find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr) {
+template <typename T> Point_t<T> Space_t<T>::find_lone_pnt(Plane_t<T> plane, Poligon_t<T> tr) const {
 	
-	int res_1 = plane.check_side(tr.pt_vector[0], 1),
-	    res_2 = plane.check_side(tr.pt_vector[1], 1),
-	    res_3 = plane.check_side(tr.pt_vector[2], 1);
+	int res_1 = plane.check_side(tr.pt_vector[0], 1);
+	int res_2 = plane.check_side(tr.pt_vector[1], 1);
+	int res_3 = plane.check_side(tr.pt_vector[2], 1);
 
 	if(res_1 == res_2) return tr.pt_vector[2];
 	
@@ -238,15 +249,11 @@ template <typename T> Point_t<T> Space_t<T>::find_lone_pnt(Plane_t<T> plane, Pol
 	}
 }
 
-template <typename T> int Space_t<T>::is_near(int i, int j, int& j_mem) {
-	if(j == i) return 0;
-	if(tr_vector[j].centre.x < tr_vector[i].centre.x - 2.0 * max_dist) {
-		j_mem = j;
-		return 0;
-	}
+template <typename T> int Space_t<T>::is_near(const Poligon_t<T>& tr_base, const Poligon_t<T>& tr_dop) const {
+	if(tr_base == tr_dop) return 0;
 
-	if(tr_vector[j].centre.x > tr_vector[i].centre.x + 2.0 * max_dist) return -1;
-	Point_t<T> pnt_dist= tr_vector[j].centre - tr_vector[i].centre;
+	if(tr_dop.centre.x > tr_base.centre.x + 2.0 * max_dist) return -1;
+	Point_t<T> pnt_dist = tr_dop.centre - tr_base.centre;
 	double tr_dist = sqrt(pnt_dist.x*pnt_dist.x + pnt_dist.y*pnt_dist.y + pnt_dist.z*pnt_dist.z);
 
 	if(tr_dist > 2.0 * max_dist) return 0;
@@ -254,7 +261,7 @@ template <typename T> int Space_t<T>::is_near(int i, int j, int& j_mem) {
 	return 1;
 }
 
-template <typename T> int Space_t<T>::is_mb_inters(Plane_t<T> tr_plane, int j) {
+template <typename T> int Space_t<T>::is_mb_inters(Plane_t<T> tr_plane, int j) const {
 	if((tr_plane.check_side(tr_vector[j].pt_vector[0], 1) == tr_plane.check_side(tr_vector[j].pt_vector[1], 1)) 
 	&& (tr_plane.check_side(tr_vector[j].pt_vector[1], 1) == tr_plane.check_side(tr_vector[j].pt_vector[2], 1))) return 0;
 
@@ -323,18 +330,19 @@ template <typename T> void Space_t<T>::find_inters_tr() {
 		Plane_t<T> tr_plane = tr_vector[i].get_plane();
 
 		for(int j = j_mem; j < num; j++) {
-			if(is_near(i, j, j_mem) == -1) break;
+			if(is_near(tr_vector[i], tr_vector[j]) == -1) break;
 
-			else {
-				if(is_near(i, j, j_mem) == 1) {	
-					check_inters(tr_plane, i, j);
-				}
-
-				else {}
+			if(tr_vector[j].centre.x < tr_vector[i].centre.x - 2.0 * max_dist) {
+				j_mem = j;
+				continue;
 			}
+
+			if(is_near(tr_vector[i], tr_vector[j]) == 1) check_inters(tr_plane, i, j);
 		}
 	}
 }
+}
+
 
 /*std::vector<Point_t<double>>::iterator it = triangle_1.pt_list.begin();
 while(it != triangle_1.pt_list.end()) {
