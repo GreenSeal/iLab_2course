@@ -48,7 +48,7 @@ parser::token_type yylex(parser::semantic_type* yylval,
 ;
 
 %token <int> NUMBER
-%token <char *> VAR
+%token <std::string> VAR
 %nterm <int> expr
 %nterm <int> statement
 
@@ -72,11 +72,8 @@ construction: cycle
 ;
 
 statement: VAR      		 {std::cout << $1 << std::endl;
-	 			  std::string str = static_cast<std::string>($1);
-	 			  if (driver -> find(str) == driver -> end()){
-				    std::cout << "Hi(2)" << std::endl;
-				    driver -> vars.insert({str, 0});
-				    std::cout << "Hi(3)" << std::endl;
+	 			  if (driver -> find($1) == driver -> end()){
+				    driver -> vars.insert({$1, 0});
 				  }
 				  else {
 				    std::cout << "Double decl of " << $1 << std::endl;
@@ -125,30 +122,34 @@ statement: VAR      		 {std::cout << $1 << std::endl;
                                   }
 				 }
 | VAR EQUAL SCAN                 {
-				  std::cout << "Hi(4)" << $1 << std::endl;
-				  std::string str = static_cast<std::string>($1);
-				  int a = 0;
+				  //std::cout << "buf = " << std::cin.rdbuf();
+				  int a = 2;
+				  //auto input = std::cin.rdbuf();
+				  //std::cin.clear();
+				  //std::cin.ignore(std::cin.rdbuf() -> in_avail());
+				  //std::cout << "buf = " << std::cin.rdbuf();
 				  std::cin >> a;
-				  std::cout << "Hi(5)" << std::endl;
-				  std::cout << "Hi(5.1)" << std::endl;
-				  if (driver -> find(str) == driver -> end()){
-				    std::cout << "Hi(6)" << std::endl;
-                                    driver -> vars.insert({str, a});
+				  //int b = scanf("%d", &a);
+				  //std::cout << b;
+				  //std::cout << "a = " << a << std::endl;
+				  if (driver -> find($1) == driver -> end()){
+				    //std::cout << "Hi(6)" << std::endl;
+                                    driver -> vars.insert({$1, a});
                                   }
                                   else {
-				    std::cout << "Hi(7)" << std::endl;
-                                    driver -> vars[str] = a;
+				    std::cout << "a = " << a << std::endl;
+                                    driver -> vars[$1] = a;
                                   }
-				  std::cout << "Hi(8)" << std::endl;
-
+				  
+				  //std::cin.rdbuf(input);
+				  //std::cout << "buf = " << std::cin.rdbuf() << std::endl;
 				 }
 | PRINT VAR                      {
-				  std::string str = static_cast<std::string>($2);
-				  if(driver -> vars.find(str) == driver -> vars.end()){
+				  if(driver -> vars.find($2) == driver -> vars.end()){
 				    std::cout << "Wrong variable to print" << std::endl;
 				    std::abort();
 				  }
-				  std::cout << driver -> vars[str] << std::endl;
+				  std::cout << driver -> vars[$2] << std::endl;
 				 }
 | PRINT NUMBER                   {std::cout << $2 << std::endl;}
 ;

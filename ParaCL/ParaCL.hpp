@@ -16,7 +16,9 @@ public:
     parser::token_type tt = static_cast<parser::token_type>(plex_->yylex());
     if (tt == yy::parser::token_type::NUMBER)
       yylval->as<int>() = std::stoi(plex_->YYText());
-    //std::cout << plex_->YYText() << std::endl;
+    if (tt == yy::parser::token_type::VAR) {
+      yylval->build<std::string>() = plex_->YYText();
+    }
     return tt;
   }
   
