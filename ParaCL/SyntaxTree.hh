@@ -2,6 +2,11 @@
 #include<string>
 #include<iostream>
 
+
+//Сделать конструкторы выделяющие динамическую память
+//
+//
+//
 struct ISyntaxTreeNode {
   NodeTreeTypes::Types type; 
 
@@ -17,8 +22,6 @@ struct ISyntaxTreeNode {
   virtual std::string GetName() const = 0;
   virtual void SetName(std::string name_) = 0;
 
-  virtual NodeTreeTypes::Types GetExtraType() const = 0;
-
   void AbortAndMessage() const {
     std::cout << "You mustn't use this function in this node" << std::endl;
     std::abort();
@@ -28,6 +31,7 @@ struct ISyntaxTreeNode {
 };
 
 struct SyntaxNodeStream final : public ISyntaxTreeNode {
+
 //Block of unused functions
 //------------------------------------------------------------------------------------
   void SetData(int data_) override{
@@ -48,7 +52,6 @@ struct SyntaxNodeStream final : public ISyntaxTreeNode {
     AbortAndMessage();
   };
   ISyntaxTreeNode * GetRight() const override{
-    AbortAndMessage();
     return NULL;
   };
   void SetLeft(ISyntaxTreeNode * left) override{
@@ -56,15 +59,8 @@ struct SyntaxNodeStream final : public ISyntaxTreeNode {
   };
 
   ISyntaxTreeNode * GetLeft() const override{
-    AbortAndMessage();
     return NULL;
   };
-
-  NodeTreeTypes::Types GetExtraType() const override{
-    AbortAndMessage();
-    return NodeTreeTypes::Types::STM;
-  };
-
 //------------------------------------------------------------------------------------
 };
 
@@ -97,8 +93,6 @@ struct SyntaxNodeNum : public ISyntaxTreeNode {
     std::abort();
   };
   ISyntaxTreeNode * GetRight() const override{
-    std::cout << "You mustn't use this function in this node" << std::endl;
-    std::abort();
     return NULL;
   };
   void SetLeft(ISyntaxTreeNode * left) override{
@@ -107,16 +101,8 @@ struct SyntaxNodeNum : public ISyntaxTreeNode {
   };
 
   ISyntaxTreeNode * GetLeft() const override{
-    std::cout << "You mustn't use this function in this node" << std::endl;
-    std::abort();
     return NULL;
   };
-
-  NodeTreeTypes::Types GetExtraType() const override{
-    AbortAndMessage();
-    return NodeTreeTypes::Types::STM;
-  };
-
 //------------------------------------------------------------------------------------
 
 }; 
@@ -150,8 +136,6 @@ struct SyntaxNodeStr : public ISyntaxTreeNode {
     std::abort();
   };
   ISyntaxTreeNode * GetRight() const override{
-    std::cout << "You mustn't use this function in this node" << std::endl;
-    std::abort();
     return NULL;
   };
   void SetLeft(ISyntaxTreeNode * left) override{
@@ -160,16 +144,8 @@ struct SyntaxNodeStr : public ISyntaxTreeNode {
   };
 
   ISyntaxTreeNode * GetLeft() const override{
-    std::cout << "You mustn't use this function in this node" << std::endl;
-    std::abort();
     return NULL;
   };
-
-  NodeTreeTypes::Types GetExtraType() const override{
-    AbortAndMessage();
-    return NodeTreeTypes::Types::STM;
-  };
-
 //------------------------------------------------------------------------------------
 };
 
@@ -213,33 +189,9 @@ struct SyntaxNodeUno : public ISyntaxTreeNode {
   };
 
   ISyntaxTreeNode * GetRight() const override{
-    std::cout << "You mustn't use this function in this node" << std::endl;\
-    std::abort();
     return NULL;
   };
-
-  NodeTreeTypes::Types GetExtraType() const override{
-    AbortAndMessage();
-    return NodeTreeTypes::Types::STM;
-  };
-
 //------------------------------------------------------------------------------------
-};
-
-struct SyntaxNodeExtraNum final : public SyntaxNodeStr {
-  const NodeTreeTypes::Types extra_type = NodeTreeTypes::Types::NUM;
-
-  NodeTreeTypes::Types GetExtraType() const override{
-    return extra_type;
-  };
-};
-
-struct SyntaxNodeExtraStr final : public SyntaxNodeStr {
-  const NodeTreeTypes::Types extra_type = NodeTreeTypes::Types::VAR;
-
-  NodeTreeTypes::Types GetExtraType() const override{
-    return extra_type;
-  };
 };
 
 struct SyntaxNodeBin final : public SyntaxNodeUno {
@@ -252,10 +204,4 @@ struct SyntaxNodeBin final : public SyntaxNodeUno {
   ISyntaxTreeNode * GetRight() const override {
     return rhs;
   };
-};
-
-struct SyntaxTree final {
-  ISyntaxTreeNode * head;
-  ISyntaxTreeNode * cur1 = head;
-  ISyntaxTreeNode * cur2 = head;
 };

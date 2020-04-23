@@ -29,7 +29,7 @@ DIGIT1      [1-9]
 "if"              return yy::parser::token_type::IF;
 "?"               return yy::parser::token_type::SCAN;
 "print"           return yy::parser::token_type::PRINT;
-{DIGIT1}{DIGIT}*  return yy::parser::token_type::NUMBER;
+"-"?{DIGIT1}{DIGIT}*|"0"  return yy::parser::token_type::NUMBER;
 {VARIABLE}        return yy::parser::token_type::VAR;
 .                 return yy::parser::token_type::ERR;
 

@@ -10,12 +10,14 @@ int yyFlexLexer::yywrap() {
 
 int main() { 
   std::ifstream prog;
-  prog.open("ParaCL.txt");
-  std::cin.rdbuf(prog.rdbuf()); 
+  auto backup = std::cin.rdbuf();
+  prog.open("Programm3.txt");
+  std::cin.rdbuf(prog.rdbuf());
   FlexLexer* lexer = new yyFlexLexer;
   yy::Driver driver(lexer);
   driver.parse();
-  //std::cout << "\n\n\n";
-  fflush(stdin);
-  Interpreter(&driver, driver.tree.head);
+  std::cin.rdbuf(backup);
+  Interpreter(&driver, driver.tree);
+  delete lexer;
+  driver.DeleteTree(driver.tree);
 }

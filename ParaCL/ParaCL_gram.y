@@ -58,6 +58,9 @@ parser::token_type yylex(parser::semantic_type* yylval,
 %nterm <ISyntaxTreeNode *> statelist
 %nterm <ISyntaxTreeNode *> mult
 %nterm <ISyntaxTreeNode *> term
+%nterm <ISyntaxTreeNode *> construction
+%nterm <ISyntaxTreeNode *> cycle
+%nterm <ISyntaxTreeNode *> if
 
 %left '+' '-' '*' '/'
 
@@ -68,13 +71,14 @@ parser::token_type yylex(parser::semantic_type* yylval,
 %%
 program : statelist { 
 		      //std::cout << "STATELIST\n";
-		      driver -> tree.head = $1;
+		      driver -> tree = $1;
 		    }
 ;
 
 statelist : statement SCOLON statelist { 
 	  				 //std::cout << "STATEMENT SCOLON STATELIST\n";
 					 $$ = new SyntaxNodeBin;
+                                         $$ -> type = NodeTreeTypes::Types::STLST;
 	  				 $$ -> SetLeft($1);
 					 $$ -> SetRight($3);
 	                               }
@@ -82,12 +86,23 @@ statelist : statement SCOLON statelist {
 				         //std::cout << "STATEMENT\n";	 
 					 $$ = $1;
 				       }
-| construction statelist
-| construction
+| construction statelist               { //std::cout << "STATEMENT CONSTR\n";
+                                         $$ = new SyntaxNodeBin;
+                                         $$ -> type = NodeTreeTypes::Types::STLST;
+                                         $$ -> SetLeft($1);
+                                         $$ -> SetRight($2);
+                                       }
+| construction                         {
+                                         $$ = $1;
+                                       }
 ;
 
-construction: cycle
-| if
+construction: cycle                    {
+	                                 $$ = $1;
+                                       }
+| if                                   {
+                                         $$ = $1;
+                                       }
 ;
 
 statement: VAR      		 {
@@ -109,39 +124,6 @@ statement: VAR      		 {
 				  $$ -> GetLeft() -> SetName($1);
 				  $$ -> SetRight($3); 
  				 }
-/*| VAR EQUAL EQUAL expr           {
-				  if (driver -> vars.find($1) == driver -> vars.end()){
-                                    std::cout << "Wrong variable" << std::endl;
-				    std::abort();
-                                  }
-                                  else {
-                                    if(driver -> vars[$1] == $4) $$ = 1;
-				    
-				    else $$ = 0;
-                                  }
-				 }
-| VAR MORE expr                  {
-				  if (driver -> vars.find($1) == driver -> vars.end()){
-                                    std::cout << "Wrong variable" << std::endl;
-                                    std::abort();
-                                  }
-                                  else {
-                                    if(driver -> vars[$1] > $3) $$ = 1;
-
-                                    else $$ = 0;
-                                  }
- 	    			 }
-| VAR LESS expr                  {
-				  if (driver -> vars.find($1) == driver -> vars.end()){
-                                    std::cout << "Wrong variable" << std::endl;
-                                    std::abort();
-                                  }
-                                  else {
-                                    if(driver -> vars[$1] == $3) $$ = 1;
-
-                                    else $$ = 0;
-                                  }
-				 }*/
 | VAR EQUAL SCAN                 {
 				  //std::cout << "VAR = SCAN\n";
 				  $$ = new SyntaxNodeBin;
@@ -164,62 +146,112 @@ statement: VAR      		 {
                                   $$ -> GetRight() -> SetName($2);
 				  //std::cout << "Stm create: " << $$ << std::endl;
 				 }
-| PRINT NUMBER                   {std::cout << $2 << std::endl;}
 ;
 
-expr: mult PLUS expr               { //std::cout <<" expr:PLUS\n";
+expr: mult PLUS expr               { 
     				     $$ = new SyntaxNodeBin;
 				     $$ -> type = NodeTreeTypes::Types::PLUS;
                                      $$ -> SetLeft($1);
 				     $$ -> SetRight($3);
 				   } 
-| mult MINUS expr                  { //std::cout << "expr:MINUS\n";
+| mult MINUS expr                  { 
                                      $$ = new SyntaxNodeBin;
                                      $$ -> type = NodeTreeTypes::Types::MINUS;
                                      $$ -> SetLeft($1);
 				     $$ -> SetRight($3);
                                    }
-| mult                             { //std::cout << "expr:mult\n";
-                                     $$ = $1;
+| mult                             { 
+				     $$ = $1;
 		                   }
+/*| MINUS mult PLUS expr               { std::cout <<" expr: " << "-" << $2 << "+" << $4 << "\n";
+                                     $$ = new SyntaxNodeBin;
+                                     $$ -> type = NodeTreeTypes::Types::PLUS;
+                                     ISyntaxTreeNode * minus = new SyntaxNodeUno;
+                                     minus -> type = NodeTreeTypes::Types::UMINUS;
+                                     minus -> SetLeft($2);
+                                     $$ -> SetLeft(minus);
+                                     $$ -> SetRight($4);
+                                   }
+| MINUS mult MINUS expr            { std::cout <<" expr: " << "-" << $2 << "-" << $4 << "\n";
+                                     $$ = new SyntaxNodeBin;
+                                     $$ -> type = NodeTreeTypes::Types::MINUS;
+                                     ISyntaxTreeNode * minus = new SyntaxNodeUno;
+                                     minus -> type = NodeTreeTypes::Types::UMINUS;
+                                     minus -> SetLeft($2);
+                                     $$ -> SetLeft(minus);
+                                     $$ -> SetRight($4);
+                                   }
+| MINUS mult                       { std::cout << "expr: " << "-" << $2 << "\n";
+                                     $$ = new SyntaxNodeUno;
+                                     $$ -> type = NodeTreeTypes::Types::UMINUS;
+                                     $$ -> SetLeft($2);
+                                   }*/
 ; 
 
-mult: term MULT mult               { //std::cout << "mult::MULT\n";
+mult: term MULT mult               { 
     				     $$ = new SyntaxNodeBin;
                                      $$ -> type = NodeTreeTypes::Types::MULT;
                                      $$ -> SetLeft($1);
 				     $$ -> SetRight($3);
 			           }
-| term DIV mult			   { //std::cout << "mult:DIV\n";
+| term DIV mult			   { 
                                      $$ = new SyntaxNodeBin;
 	                             $$ -> type = NodeTreeTypes::Types::DIV;
                                      $$ -> SetLeft($1);
                                      $$ -> SetRight($3);
  	                           }
-| term                             { //std::cout << "mult:term\n";
+| term                             { 
                                      $$ = $1;
                                    }
 ;
 
-term: L_BRACE expr R_BRACE         { //std::cout << "term:expr\n";
+term: L_BRACE expr R_BRACE         { 
                                      $$ = $2;
                                    }
-| NUMBER                           { //std::cout << "term:NUM\n";
+| NUMBER                           { 
                                      $$ = new SyntaxNodeNum;
                                      $$ -> type = NodeTreeTypes::Types::NUM;
                                      $$ -> SetData($1);
                                    }
-| VAR                              { //std::cout << "term:VAR\n";
+| VAR                              { 
                                      $$ = new SyntaxNodeStr;
                                      $$ -> type = NodeTreeTypes::Types::VAR;
                                      $$ -> SetName($1);
                                    }
+| L_BRACE expr EQUAL EQUAL expr R_BRACE { //std::cout << "term:DEQUAL\n";
+                                          $$ = new SyntaxNodeBin;
+                                          $$ -> type = NodeTreeTypes::Types::DEQUAL;
+                                          $$ -> SetLeft($2);
+                                          $$ -> SetRight($5);
+                                        }
+| L_BRACE expr MORE expr R_BRACE        { //std::cout << "term:MORE\n";
+                                          $$ = new SyntaxNodeBin;
+                                          $$ -> type = NodeTreeTypes::Types::MORE;
+                                          $$ -> SetLeft($2);
+                                          $$ -> SetRight($4);
+                                        }
+| L_BRACE expr LESS expr R_BRACE        { //std::cout << "trem:LESS\n";
+                                          $$ = new SyntaxNodeBin;
+                                          $$ -> type = NodeTreeTypes::Types::LESS;
+                                          $$ -> SetLeft($2);
+                                          $$ -> SetRight($4);
+                                        }
 ;
 
-cycle: WHILE L_BRACE statement R_BRACE L_FGR statelist R_FGR  
+cycle: WHILE expr L_FGR statelist R_FGR { //std::cout << "cycle\n"; 
+                                          $$ = new SyntaxNodeBin;
+                                          $$ -> type = NodeTreeTypes::Types::WHILE;
+                                          $$ -> SetLeft($2);
+                                          $$ -> SetRight($4);	 
+                                        } 
 ;
 
-if: IF L_BRACE statement R_BRACE L_FGR statelist R_FGR        
+if: IF expr L_FGR statelist R_FGR       { //std::cout << "if\n";
+                                          $$ = new SyntaxNodeBin;
+                                          $$ -> type = NodeTreeTypes::Types::IF;
+                                          $$ -> SetLeft($2);
+                                          $$ -> SetRight($4);
+                                        }
 ;
 
 %%

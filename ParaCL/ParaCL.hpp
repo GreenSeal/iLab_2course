@@ -9,7 +9,7 @@ class Driver {
   FlexLexer *plex_;
 
 public:
-  SyntaxTree tree;
+  ISyntaxTreeNode * tree;
   std::unordered_map<std::string, int> vars;
   
   Driver (FlexLexer *plex) : plex_(plex), vars() {}
@@ -22,6 +22,18 @@ public:
       yylval->build<std::string>() = plex_->YYText();
     }
     return tt;
+  }
+
+  void DeleteTree(ISyntaxTreeNode * node) {
+    if((node -> GetLeft()) != NULL) {
+      DeleteTree(node -> GetLeft());
+    }
+
+    if((node -> GetRight()) != NULL) {
+      DeleteTree(node -> GetRight());
+    } 
+
+    delete node;
   }
   
   bool parse() {
