@@ -9,18 +9,20 @@ class Driver {
   FlexLexer *plex_;
 
 public:
+
   ISyntaxTreeNode * tree;
-  std::unordered_map<std::string, int> vars;
+  std::vector<std::unordered_map<std::string, int>> vars;
   
   Driver (FlexLexer *plex) : plex_(plex), vars() {}
 
-  parser::token_type yylex(parser::semantic_type* yylval) {
+  parser::token_type yylex(parser::semantic_type* yylval, parser::location_type* yylloc) {
     parser::token_type tt = static_cast<parser::token_type>(plex_->yylex());
     if (tt == yy::parser::token_type::NUMBER)
       yylval->as<int>() = std::stoi(plex_->YYText());
-    if (tt == yy::parser::token_type::VAR) {
+    if (tt == yy::parser::token_type::VAR) 
       yylval->build<std::string>() = plex_->YYText();
-    }
+    if(tt == yy::parser::token_type::ERR);
+      
     return tt;
   }
 
@@ -40,14 +42,6 @@ public:
     parser parser(this);
     bool res = parser.parse();
     return !res;
-  }
-
-  auto find(std::string& str) {
-    return vars.find(str);
-  }
-
-  auto end() {
-    return vars.end();
   }
 };  
 

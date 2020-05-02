@@ -1,0 +1,26 @@
+first = -1;
+second = 30;
+third = -2;
+
+fourth = ?;
+if (((first == 1) || (third == -(-2 + 4))) || ((second > 0) && (fourth*third < 0))) {
+  tmp = 7;
+  first = second / fourth - tmp - third;
+  print first;
+
+  if (fourth > 2) {
+    if (fourth > 3) {
+      g5 = 75;
+    }
+    g4 = 74;
+    print fourth*6;
+    print g5;
+  }
+g2 = 72;
+print g4;
+print g5;
+}
+
+print tmp;
+print g2;
+print g5;

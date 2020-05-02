@@ -10,8 +10,20 @@
 #include <unordered_map>
 #include "SyntaxTree.hh"
 
-namespace yy {class Driver; }
+namespace yy {
+class Driver; 
 }
+
+/*#define YYLLOC_DEFAULT(Cur, Rhs, N)			\
+  if (N) {							\
+    (Cur)=YYRHSLOC(Rhs,1);				\
+  } 							\
+  else {							\
+    (Cur)=YYRHSLOC(Rhs,0);				\
+  }*/
+
+}
+
 
 %code
 {
@@ -19,7 +31,7 @@ namespace yy {class Driver; }
 #include "ParaCL.hpp"
 namespace yy {
 
-parser::token_type yylex(parser::semantic_type* yylval,
+parser::token_type yylex(parser::semantic_type* yylval, parser::location_type* yylloc,
       			 Driver* driver);
 
 }
@@ -28,7 +40,7 @@ parser::token_type yylex(parser::semantic_type* yylval,
 }
 
 %defines
-%define api.value.type variant
+%define api.value.type variant 
 %param {yy::Driver* driver}
 
 %token
@@ -48,6 +60,8 @@ parser::token_type yylex(parser::semantic_type* yylval,
   IF      "if"
   SCAN    "?"
   PRINT   "print"
+  AND     "&&"
+  OR      "||"
   ERR
 ;
 
@@ -63,8 +77,6 @@ parser::token_type yylex(parser::semantic_type* yylval,
 %nterm <ISyntaxTreeNode *> if
 
 %left '+' '-' '*' '/'
-
-
 
 %start program
 
@@ -116,7 +128,8 @@ statement: VAR      		 {
 				  $$ -> GetRight() -> SetData(0);
 	                         }
 | VAR EQUAL expr        	 {
-				  //std::cout << "VAR = EXPR\n"; 
+				  //std::cout << "VAR = EXPR\n";
+                                  //std::cout << "@1.first_line = " << @1.first_line << std::endl;
 				  $$ = new SyntaxNodeBin;
 				  $$ -> type = NodeTreeTypes::Types::EQUAL;
 				  $$ -> SetLeft(new SyntaxNodeStr);
@@ -133,87 +146,67 @@ statement: VAR      		 {
                                   $$ -> GetLeft() -> SetName($1);
                                   $$ -> SetRight(new SyntaxNodeStream);
                                   $$ -> GetRight() -> type = NodeTreeTypes::Types::SCAN;
-				  //std::cout << "Stm create: " << $$ << std::endl;
 				 }
-| PRINT VAR                      {
+| PRINT expr                     {
 				  //std::cout << "PRINT VAR\n";
 				  $$ = new SyntaxNodeBin;
                                   $$ -> type = NodeTreeTypes::Types::EQUAL;
                                   $$ -> SetLeft(new SyntaxNodeStream);
                                   $$ -> GetLeft() -> type = NodeTreeTypes::Types::PRINT;
-                                  $$ -> SetRight(new SyntaxNodeStr);
-                                  $$ -> GetRight() -> type = NodeTreeTypes::Types::VAR;
-                                  $$ -> GetRight() -> SetName($2);
-				  //std::cout << "Stm create: " << $$ << std::endl;
+                                  $$ -> SetRight($2);
 				 }
 ;
 
-expr: mult PLUS expr               { 
+expr: mult PLUS expr               { //std::cout << "PLUS\n";
     				     $$ = new SyntaxNodeBin;
 				     $$ -> type = NodeTreeTypes::Types::PLUS;
                                      $$ -> SetLeft($1);
 				     $$ -> SetRight($3);
 				   } 
-| mult MINUS expr                  { 
+| mult MINUS expr                  { //std::cout << "MINUS\n";
                                      $$ = new SyntaxNodeBin;
                                      $$ -> type = NodeTreeTypes::Types::MINUS;
                                      $$ -> SetLeft($1);
 				     $$ -> SetRight($3);
                                    }
-| mult                             { 
+| mult                             { //std::cout << "mult\n";
 				     $$ = $1;
 		                   }
-/*| MINUS mult PLUS expr               { std::cout <<" expr: " << "-" << $2 << "+" << $4 << "\n";
-                                     $$ = new SyntaxNodeBin;
-                                     $$ -> type = NodeTreeTypes::Types::PLUS;
-                                     ISyntaxTreeNode * minus = new SyntaxNodeUno;
-                                     minus -> type = NodeTreeTypes::Types::UMINUS;
-                                     minus -> SetLeft($2);
-                                     $$ -> SetLeft(minus);
-                                     $$ -> SetRight($4);
-                                   }
-| MINUS mult MINUS expr            { std::cout <<" expr: " << "-" << $2 << "-" << $4 << "\n";
-                                     $$ = new SyntaxNodeBin;
-                                     $$ -> type = NodeTreeTypes::Types::MINUS;
-                                     ISyntaxTreeNode * minus = new SyntaxNodeUno;
-                                     minus -> type = NodeTreeTypes::Types::UMINUS;
-                                     minus -> SetLeft($2);
-                                     $$ -> SetLeft(minus);
-                                     $$ -> SetRight($4);
-                                   }
-| MINUS mult                       { std::cout << "expr: " << "-" << $2 << "\n";
-                                     $$ = new SyntaxNodeUno;
-                                     $$ -> type = NodeTreeTypes::Types::UMINUS;
-                                     $$ -> SetLeft($2);
-                                   }*/
 ; 
 
-mult: term MULT mult               { 
+mult: term MULT mult               { //std::cout << "MULT\n";
     				     $$ = new SyntaxNodeBin;
                                      $$ -> type = NodeTreeTypes::Types::MULT;
                                      $$ -> SetLeft($1);
 				     $$ -> SetRight($3);
 			           }
-| term DIV mult			   { 
+| term DIV mult			   { //std::cout << "DIV\n";
                                      $$ = new SyntaxNodeBin;
 	                             $$ -> type = NodeTreeTypes::Types::DIV;
                                      $$ -> SetLeft($1);
                                      $$ -> SetRight($3);
  	                           }
-| term                             { 
+| term                             { //std::cout << "term\n";
                                      $$ = $1;
                                    }
 ;
 
-term: L_BRACE expr R_BRACE         { 
+term: L_BRACE expr R_BRACE         { //std::cout << "(expr)\n";
                                      $$ = $2;
                                    }
-| NUMBER                           { 
+| MINUS L_BRACE expr R_BRACE       {
+                                     $$ = new SyntaxNodeUno;
+                                     $$ -> type = NodeTreeTypes::Types::UMINUS;
+                                     $$ -> SetLeft($3); 
+                                   }
+| NUMBER                           { //std::cout << "term:NUM\n";
+                                     std::cout << "@1 = " << @1 << std::endl;
                                      $$ = new SyntaxNodeNum;
                                      $$ -> type = NodeTreeTypes::Types::NUM;
                                      $$ -> SetData($1);
                                    }
-| VAR                              { 
+| VAR                              { //std::cout << "term:VAR\n";
+                                     std::cout << "@1 = " << @1 << std::endl;
                                      $$ = new SyntaxNodeStr;
                                      $$ -> type = NodeTreeTypes::Types::VAR;
                                      $$ -> SetName($1);
@@ -236,6 +229,19 @@ term: L_BRACE expr R_BRACE         {
                                           $$ -> SetLeft($2);
                                           $$ -> SetRight($4);
                                         }
+| L_BRACE expr AND expr R_BRACE         { //std::cout << "AND\n";
+                                          $$ = new SyntaxNodeBin;
+                                          $$ -> type = NodeTreeTypes::Types::AND;
+                                          $$ -> SetLeft($2);
+                                          $$ -> SetRight($4);
+                                        }
+| L_BRACE expr OR expr R_BRACE          { //std::cout << "OR\n";
+                                          $$ = new SyntaxNodeBin;
+                                          $$ ->  type = NodeTreeTypes::Types::OR;
+                                          $$ -> SetLeft($2);
+                                          $$ -> SetRight($4);
+                                        }
+
 ;
 
 cycle: WHILE expr L_FGR statelist R_FGR { //std::cout << "cycle\n"; 
@@ -259,12 +265,12 @@ if: IF expr L_FGR statelist R_FGR       { //std::cout << "if\n";
 
 namespace yy {
 
-parser::token_type yylex(parser::semantic_type* yylval,
+parser::token_type yylex(parser::semantic_type* yylval, parser::location_type* yylloc, 
                          Driver* driver)
 {
-  return driver->yylex(yylval);
+  return driver->yylex(yylval, yylloc);
 }
 
-void parser::error(const std::string&){}
+void parser::error(const location_type&, const std::string&){}
 
 }

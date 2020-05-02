@@ -4,6 +4,8 @@
 
 using namespace NodeTreeTypes;
 
+int curr_scope = 0;
+
 int Interpreter(yy::Driver* driver, ISyntaxTreeNode* node) {
   //std::cout << "Type: " << node -> type << std::endl;
   Types type = node -> type;
@@ -21,17 +23,21 @@ int Interpreter(yy::Driver* driver, ISyntaxTreeNode* node) {
   if(type == Types::EQUAL) {
     if(node -> GetLeft() -> type == Types::PRINT) {
       //std::cout << "PRINT\n";
-      if(node -> GetRight() -> type == Types::VAR) {
-        if(driver -> vars.find(node -> GetRight() -> GetName()) != driver -> vars.end()) {
-          std::cout << driver -> vars[node -> GetRight() -> GetName()] << std::endl;
-          return -1;
-        }
-      }
+      std::cout << CalculateRes(driver, node -> GetRight()) << std::endl;
+      return -1;
+      /*if(node -> GetRight() -> type == Types::VAR) {
+	for(int i = 0; i <= curr_scope; ++i){
+          if(driver -> vars[i].find(node -> GetRight() -> GetName()) != driver -> vars[i].end()) {
+            std::cout << driver -> vars[i][node -> GetRight() -> GetName()] << std::endl;
+            return -1;
+          }
+	}
+      }*/
 
-      else {
+      /*else {
         std::cout << "Wrong using function print" << std::endl;
         std::abort();
-      }
+      }*/
     }
 
     if(node -> GetLeft() -> type == Types::VAR) {
@@ -40,13 +46,26 @@ int Interpreter(yy::Driver* driver, ISyntaxTreeNode* node) {
         //std::cout << "SCAN\n";
         int a = 10;
         std::cin >> a;
-        driver -> vars[node -> GetLeft() -> GetName()] = a;
+	for(int i = 0; i <= curr_scope; ++i){
+	  if(driver -> vars[i].find(node -> GetLeft() -> GetName()) != driver -> vars[i].end()) {
+		  driver -> vars[i][node -> GetLeft() -> GetName()] = a;
+		  return -1;
+          }
+	}
+        driver -> vars[curr_scope][node -> GetLeft() -> GetName()] = a;
         return -1;
       }
 
       else {
         //std::cout << "EXPR\n";
-        driver -> vars[node -> GetLeft() -> GetName()] = CalculateRes(driver, node -> GetRight());
+	for(int i = 0; i <= curr_scope; ++i){
+          if(driver -> vars[i].find(node -> GetLeft() -> GetName()) != driver -> vars[i].end()) {
+                  driver -> vars[i][node -> GetLeft() -> GetName()] = CalculateRes(driver, node -> GetRight());
+                  return -1;
+          }
+        }
+
+        driver -> vars[curr_scope][node -> GetLeft() -> GetName()] = CalculateRes(driver, node -> GetRight());
         return -1;
       }
     }
@@ -61,7 +80,12 @@ int Interpreter(yy::Driver* driver, ISyntaxTreeNode* node) {
     //std::cout << "IF\n";
     if(CalculateRes(driver, node -> GetLeft()) != 0) {
       //std::cout << "IF_TRUE\n";
+      ++curr_scope;
+      std::unordered_map<std::string, int> map;
+      driver->vars.push_back(map);
       Interpreter(driver, node -> GetRight());
+      driver -> vars.pop_back();
+      --curr_scope;
     } 
     return -1;
   }
@@ -70,7 +94,12 @@ int Interpreter(yy::Driver* driver, ISyntaxTreeNode* node) {
     //std::cout << "WHILE\n";
     if(CalculateRes(driver, node -> GetLeft()) != 0) {
       //std::cout << "WHILE_TRUE\n";
+      ++curr_scope;
+      std::unordered_map<std::string, int> map;
+      driver -> vars.push_back(map);
       Interpreter(driver, node -> GetRight());
+      driver -> vars.pop_back();
+      --curr_scope;
       Interpreter(driver, node);
     }
     return -1;
@@ -84,28 +113,24 @@ int Interpreter(yy::Driver* driver, ISyntaxTreeNode* node) {
 
 double CalculateRes(yy::Driver * driver, ISyntaxTreeNode * node) {
   switch(node -> type) {
-    case Types::NUM: {
-		       return node -> GetData();
-		     }
+    case Types::NUM: return node -> GetData();
     
     case Types::VAR: {
-		       return driver -> vars[node -> GetName()];
-		     }
-
-    case Types::PLUS: {
-		        return CalculateRes(driver, node -> GetLeft()) + CalculateRes(driver, node -> GetRight());
-                      }
-
-    case Types::MINUS: {
-			 return CalculateRes(driver, node -> GetLeft()) - CalculateRes(driver, node -> GetRight());
+		       for(int i = 0; i <= curr_scope; ++i) {
+			 if((driver -> vars[i].find(node -> GetName())) != driver -> vars[i].end()) return driver -> vars[i][node -> GetName()];
 		       }
 
-    case Types::MULT: {
-			return CalculateRes(driver, node -> GetLeft()) * CalculateRes(driver, node -> GetRight());
-                      }
-    case Types::DIV: { 
-		       return CalculateRes(driver, node -> GetLeft()) / CalculateRes(driver, node -> GetRight());
+		       std::cout << "No var\n";
+		       std::abort();
 		     }
+
+    case Types::PLUS: return CalculateRes(driver, node -> GetLeft()) + CalculateRes(driver, node -> GetRight());
+
+    case Types::MINUS: return CalculateRes(driver, node -> GetLeft()) - CalculateRes(driver, node -> GetRight());
+
+    case Types::MULT: return CalculateRes(driver, node -> GetLeft()) * CalculateRes(driver, node -> GetRight());
+    
+    case Types::DIV: return CalculateRes(driver, node -> GetLeft()) / CalculateRes(driver, node -> GetRight());
 
     case Types::UMINUS: return -CalculateRes(driver, node -> GetLeft());
 
@@ -116,16 +141,20 @@ double CalculateRes(yy::Driver * driver, ISyntaxTreeNode * node) {
 			}
 
     case Types::MORE: {
-                          if (CalculateRes(driver, node -> GetLeft()) > CalculateRes(driver, node ->GetRight())) return 1;
+                        if (CalculateRes(driver, node -> GetLeft()) > CalculateRes(driver, node ->GetRight())) return 1;
 
-                          else return 0;
-                        }
+                        else return 0;
+                      }
 
     case Types::LESS: {
-                          if (CalculateRes(driver, node -> GetLeft()) < CalculateRes(driver, node ->GetRight())) return 1;
+                        if (CalculateRes(driver, node -> GetLeft()) < CalculateRes(driver, node ->GetRight())) return 1;
 
-                          else return 0;
-                        }
+                        else return 0;
+                      }
+
+    case Types::AND: return (CalculateRes(driver, node -> GetLeft()) && CalculateRes(driver, node -> GetRight()));
+
+    case Types::OR: return(CalculateRes(driver, node -> GetLeft()) || CalculateRes(driver, node -> GetLeft()));
 
     default: {
 	       std::cout << "Wrong type on expr tree: " << node -> type << std::endl;

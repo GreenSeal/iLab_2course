@@ -32,6 +32,13 @@ struct ISyntaxTreeNode {
 
 struct SyntaxNodeStream final : public ISyntaxTreeNode {
 
+  ISyntaxTreeNode * GetRight() const override{
+    return NULL;
+  };
+
+  ISyntaxTreeNode * GetLeft() const override{
+    return NULL;
+  };
 //Block of unused functions
 //------------------------------------------------------------------------------------
   void SetData(int data_) override{
@@ -51,15 +58,8 @@ struct SyntaxNodeStream final : public ISyntaxTreeNode {
   void SetRight(ISyntaxTreeNode * right) override{
     AbortAndMessage();
   };
-  ISyntaxTreeNode * GetRight() const override{
-    return NULL;
-  };
   void SetLeft(ISyntaxTreeNode * left) override{
     AbortAndMessage();
-  };
-
-  ISyntaxTreeNode * GetLeft() const override{
-    return NULL;
   };
 //------------------------------------------------------------------------------------
 };
@@ -73,6 +73,14 @@ struct SyntaxNodeNum : public ISyntaxTreeNode {
 
   int GetData() const override{
     return data;
+  };
+
+  ISyntaxTreeNode * GetRight() const override{
+    return NULL;
+  };
+
+  ISyntaxTreeNode * GetLeft() const override{
+    return NULL;
   };
 
   virtual ~SyntaxNodeNum() {};
@@ -92,16 +100,9 @@ struct SyntaxNodeNum : public ISyntaxTreeNode {
     std::cout << "You mustn't use this function in this node" << std::endl;
     std::abort();
   };
-  ISyntaxTreeNode * GetRight() const override{
-    return NULL;
-  };
   void SetLeft(ISyntaxTreeNode * left) override{
     std::cout << "You mustn't use this function in this node" << std::endl;
     std::abort();
-  };
-
-  ISyntaxTreeNode * GetLeft() const override{
-    return NULL;
   };
 //------------------------------------------------------------------------------------
 
@@ -116,6 +117,14 @@ struct SyntaxNodeStr : public ISyntaxTreeNode {
 
   void SetName(std::string name_) override{
     name = name_;
+  };
+
+  ISyntaxTreeNode * GetRight() const override{
+    return NULL;
+  };
+
+  ISyntaxTreeNode * GetLeft() const override{
+    return NULL;
   };
 
   virtual ~SyntaxNodeStr() {};
@@ -135,16 +144,9 @@ struct SyntaxNodeStr : public ISyntaxTreeNode {
     std::cout << "You mustn't use this function in this node" << std::endl;
     std::abort();
   };
-  ISyntaxTreeNode * GetRight() const override{
-    return NULL;
-  };
   void SetLeft(ISyntaxTreeNode * left) override{
     std::cout << "You mustn't use this function in this node" << std::endl;
     std::abort();
-  };
-
-  ISyntaxTreeNode * GetLeft() const override{
-    return NULL;
   };
 //------------------------------------------------------------------------------------
 };
@@ -158,6 +160,10 @@ struct SyntaxNodeUno : public ISyntaxTreeNode {
 
   ISyntaxTreeNode * GetLeft() const override{
     return lft;
+  };
+
+  ISyntaxTreeNode * GetRight() const override{
+    return NULL;
   };
 
   virtual ~SyntaxNodeUno() {};
@@ -186,10 +192,6 @@ struct SyntaxNodeUno : public ISyntaxTreeNode {
   void SetRight(ISyntaxTreeNode * right) override{
     std::cout << "You mustn't use this function in this node" << std::endl;
     std::abort();
-  };
-
-  ISyntaxTreeNode * GetRight() const override{
-    return NULL;
   };
 //------------------------------------------------------------------------------------
 };
