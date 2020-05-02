@@ -1,9 +1,0 @@
-i = ?;
-j = ?;
-if(i > 5) {
-  print i;
-}
-
-if(i < 7) {
-  print j;
-}
